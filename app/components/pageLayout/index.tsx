@@ -50,7 +50,6 @@ export function PageLayout({
             isLoggedIn={isLoggedIn}
             publicStoreDomain={publicStoreDomain}
             onCartOpen={() => setCartOpen(true)}
-            onSearchOpen={() => setSearchOpen(true)}
           />
           <main className="flex-1 overflow-auto">{children}</main>
         </SidebarInset>

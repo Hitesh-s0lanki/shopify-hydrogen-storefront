@@ -18,9 +18,11 @@ import {NotFoundPage} from './components/404';
 export type RootLoader = typeof loader;
 
 export function links() {
-  return [{rel: 'icon', type: 'image/svg+xml', href: favicon}];
+  return [
+    {rel: 'icon', type: 'image/svg+xml', href: favicon},
+    {rel: 'stylesheet', href: globalsStyles}, // ✅ add this
+  ];
 }
-
 export async function loader(args: Route.LoaderArgs) {
   const {storefront, cart, customerAccount, env} = args.context;
 
@@ -60,8 +62,6 @@ export function Layout({children}: {children?: React.ReactNode}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        {/* <link rel="stylesheet" href={appStyles}></link> */}
-        <link rel="stylesheet" href={globalsStyles}></link>
         <title>Hydrogen</title>
         <meta
           name="description"

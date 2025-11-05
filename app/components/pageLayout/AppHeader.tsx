@@ -1,4 +1,4 @@
-import React, {Suspense} from 'react';
+import React, {Suspense, lazy, useState} from 'react';
 import {Await, Link, useLocation} from 'react-router';
 import {Search, User} from 'lucide-react';
 import type {CartApiQueryFragment, HeaderQuery} from 'storefrontapi.generated';
@@ -21,17 +21,17 @@ interface AppHeaderProps {
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
   onCartOpen: () => void;
-  onSearchOpen: () => void;
+  onSearchOpen?: () => void;
 }
 
-export function AppHeader({
-  header,
-  cart,
-  isLoggedIn,
-  publicStoreDomain,
-  onCartOpen,
-  onSearchOpen,
-}: AppHeaderProps) {
+const SearchCommand = lazy(() =>
+  import('~/components/search/SearchCommand').then((module) => ({
+    default: module.SearchCommand,
+  })),
+);
+
+export function AppHeader({cart, isLoggedIn, onCartOpen}: AppHeaderProps) {
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const breadcrumbs = generateBreadcrumbs(location.pathname);
 
@@ -74,12 +74,16 @@ export function AppHeader({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onSearchOpen}
+          onClick={() => setSearchOpen(true)}
           className="relative"
         >
           <Search className="size-4" />
           <span className="sr-only">Search</span>
         </Button>
+
+        <Suspense fallback={<div>Loading...</div>}>
+          <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+        </Suspense>
 
         <CartHeaderButton cart={cart} onCartOpen={onCartOpen} />
 

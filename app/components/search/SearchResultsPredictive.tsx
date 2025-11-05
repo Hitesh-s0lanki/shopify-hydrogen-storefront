@@ -6,7 +6,7 @@ import {
   urlWithTrackingParams,
   type PredictiveSearchReturn,
 } from '~/lib/search';
-import {useAside} from './Aside';
+import {useAside} from '../Aside';
 
 type PredictiveSearchItems = PredictiveSearchReturn['result']['items'];
 
@@ -302,3 +302,4 @@ function usePredictiveSearch(): UsePredictiveSearchReturn {
 
   return {items, total, inputRef, term, fetcher};
 }
+

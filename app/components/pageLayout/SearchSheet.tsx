@@ -10,8 +10,8 @@ import {
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,
-} from '~/components/SearchFormPredictive';
-import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+} from '~/components/search/SearchFormPredictive';
+import {SearchResultsPredictive} from '~/components/search/SearchResultsPredictive';
 
 interface SearchSheetProps {
   open: boolean;

@@ -6,7 +6,7 @@ import {
 } from 'react-router';
 import React, {useRef, useEffect} from 'react';
 import type {PredictiveSearchReturn} from '~/lib/search';
-import {useAside} from './Aside';
+import {useAside} from '../Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -74,3 +74,4 @@ export function SearchFormPredictive({
     </fetcher.Form>
   );
 }
+
