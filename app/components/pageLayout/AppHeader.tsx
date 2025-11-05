@@ -20,7 +20,7 @@ interface AppHeaderProps {
   cart: Promise<CartApiQueryFragment | null>;
   isLoggedIn: Promise<boolean>;
   publicStoreDomain: string;
-  onCartOpen: () => void;
+  onCartOpen?: () => void;
   onSearchOpen?: () => void;
 }
 

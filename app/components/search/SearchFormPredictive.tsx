@@ -6,7 +6,6 @@ import {
 } from 'react-router';
 import React, {useRef, useEffect} from 'react';
 import type {PredictiveSearchReturn} from '~/lib/search';
-import {useAside} from '../Aside';
 
 type SearchFormPredictiveChildren = (args: {
   fetchResults: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -32,7 +31,6 @@ export function SearchFormPredictive({
   const fetcher = useFetcher<PredictiveSearchReturn>({key: 'search'});
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
-  const aside = useAside();
 
   /** Reset the input value and blur the input */
   function resetInput(event: React.FormEvent<HTMLFormElement>) {
@@ -47,7 +45,6 @@ export function SearchFormPredictive({
   function goToSearch() {
     const term = inputRef?.current?.value;
     void navigate(SEARCH_ENDPOINT + (term ? `?q=${term}` : ''));
-    aside.close();
   }
 
   /** Fetch search results based on the input value */

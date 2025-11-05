@@ -9,7 +9,6 @@ import {
   SidebarProvider,
   SidebarRail,
 } from '~/components/ui/sidebar';
-import {Aside} from '~/components/Aside';
 import {AppSidebar} from './AppSidebar';
 import {AppHeader} from './AppHeader';
 import {CartSheet} from './CartSheet';
@@ -36,31 +35,29 @@ export function PageLayout({
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <Aside.Provider>
-      <SidebarProvider>
-        <AppSidebar
+    <SidebarProvider>
+      <AppSidebar
+        header={header}
+        publicStoreDomain={publicStoreDomain}
+        isLoggedIn={isLoggedIn}
+      />
+      <SidebarInset>
+        <AppHeader
           header={header}
-          publicStoreDomain={publicStoreDomain}
+          cart={cart}
           isLoggedIn={isLoggedIn}
+          publicStoreDomain={publicStoreDomain}
+          onCartOpen={() => setCartOpen(true)}
         />
-        <SidebarInset>
-          <AppHeader
-            header={header}
-            cart={cart}
-            isLoggedIn={isLoggedIn}
-            publicStoreDomain={publicStoreDomain}
-            onCartOpen={() => setCartOpen(true)}
-          />
-          <main className="flex-1 overflow-auto">{children}</main>
-        </SidebarInset>
-        <SidebarRail />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </SidebarInset>
+      <SidebarRail />
 
-        {/* Cart Sheet */}
-        <CartSheet cart={cart} open={cartOpen} onOpenChange={setCartOpen} />
+      {/* Cart Sheet */}
+      <CartSheet cart={cart} open={cartOpen} onOpenChange={setCartOpen} />
 
-        {/* Search Sheet */}
-        <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
-      </SidebarProvider>
-    </Aside.Provider>
+      {/* Search Sheet */}
+      <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
+    </SidebarProvider>
   );
 }
