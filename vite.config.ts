@@ -32,6 +32,7 @@ export default defineConfig({
        */
       include: ['set-cookie-parser', 'cookie', 'react-router'],
     },
+    noExternal: ['@pinecone-database/pinecone'],
   },
   server: {
     allowedHosts: ['.tryhydrogen.dev'],

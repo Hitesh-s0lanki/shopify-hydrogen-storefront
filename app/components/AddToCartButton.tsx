@@ -50,7 +50,7 @@ export function AddToCartButton({
                 variant === 'large' && 'h-14 text-base px-6',
                 variant === 'default' && 'h-12 text-base px-5',
                 variant === 'compact' && 'h-10 text-sm px-4',
-                className
+                className,
               )}
             >
               {/* Shimmer effect on hover */}

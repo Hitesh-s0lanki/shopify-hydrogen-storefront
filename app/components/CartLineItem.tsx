@@ -5,6 +5,8 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import {Trash2} from 'lucide-react';
+import {Button} from './ui/button';
 
 type CartLine = OptimisticCartLine<CartApiQueryFragment>;
 
@@ -22,21 +24,26 @@ export function CartLineItem({
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
+  const isAside = layout === 'aside';
 
   return (
     <li key={id} className="cart-line group">
-      <div className="flex gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+      <div
+        className={`flex gap-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors ${
+          isAside ? 'p-3' : 'p-4'
+        }`}
+      >
         {image && (
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <Link prefetch="intent" to={lineItemUrl} className="block">
               <div className="relative overflow-hidden rounded-lg border bg-muted">
                 <Image
                   alt={title}
                   aspectRatio="1/1"
                   data={image}
-                  height={100}
+                  height={isAside ? 80 : 100}
                   loading="lazy"
-                  width={100}
+                  width={isAside ? 80 : 100}
                   className="object-cover transition-transform group-hover:scale-105"
                 />
               </div>
@@ -44,31 +51,43 @@ export function CartLineItem({
           </div>
         )}
 
-        <div className="flex-1 min-w-0">
-          <Link prefetch="intent" to={lineItemUrl} className="block">
-            <h4 className="font-semibold text-base mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <Link prefetch="intent" to={lineItemUrl} className="block shrink-0">
+            <h4
+              className={`font-semibold mb-1 line-clamp-2 group-hover:text-primary transition-colors ${
+                isAside ? 'text-sm' : 'text-base'
+              }`}
+            >
               {product.title}
             </h4>
           </Link>
-          
+
           {selectedOptions.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-1.5 mb-2 shrink-0">
               {selectedOptions.map((option) => (
                 <span
                   key={option.name}
-                  className="text-xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground"
+                  className={`px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground ${
+                    isAside ? 'text-[10px]' : 'text-xs'
+                  }`}
                 >
                   {option.name}: {option.value}
                 </span>
               ))}
             </div>
           )}
-          
-          <div className="flex items-center justify-between gap-4 mt-3">
-            <div className="font-semibold text-lg">
+
+          <div
+            className={`flex items-center justify-between gap-3 mt-auto ${
+              isAside ? 'flex-col items-start gap-2' : 'flex-row'
+            }`}
+          >
+            <div
+              className={`font-semibold ${isAside ? 'text-base' : 'text-lg'}`}
+            >
               <ProductPrice price={line?.cost?.totalAmount} />
             </div>
-            <CartLineQuantity line={line} />
+            <CartLineQuantity line={line} layout={layout} />
           </div>
         </div>
       </div>
@@ -81,27 +100,50 @@ export function CartLineItem({
  * These controls are disabled when the line item is new, and the server
  * hasn't yet responded that it was successfully added to the cart.
  */
-function CartLineQuantity({line}: {line: CartLine}) {
+function CartLineQuantity({
+  line,
+  layout,
+}: {
+  line: CartLine;
+  layout: CartLayout;
+}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
+  const isAside = layout === 'aside';
 
   return (
-    <div className="cart-line-quantity flex items-center gap-2">
-      <div className="flex items-center gap-1 border rounded-lg bg-background">
+    <div
+      className={`cart-line-quantity flex items-center gap-2 ${
+        isAside ? 'w-full' : 'shrink-0'
+      }`}
+    >
+      <div
+        className={`flex items-center gap-0.5 border rounded-lg bg-background ${
+          isAside ? 'flex-1 justify-between' : ''
+        }`}
+      >
         <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
           <button
             aria-label="Decrease quantity"
             disabled={quantity <= 1 || !!isOptimistic}
             name="decrease-quantity"
             value={prevQuantity}
-            className="px-2 py-1 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-l-lg"
+            className={`hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-l-lg ${
+              isAside ? 'px-2.5 py-1.5 flex-1' : 'px-2 py-1'
+            }`}
           >
-            <span className="text-lg">&#8722;</span>
+            <span className={isAside ? 'text-base' : 'text-lg'}>&#8722;</span>
           </button>
         </CartLineUpdateButton>
-        <span className="px-3 py-1 text-sm font-medium min-w-[2.5rem] text-center">
+        <span
+          className={`font-medium text-center ${
+            isAside
+              ? 'px-2 py-1.5 text-sm min-w-8 flex-1'
+              : 'px-3 py-1 text-sm min-w-10'
+          }`}
+        >
           {quantity}
         </span>
         <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
@@ -110,13 +152,19 @@ function CartLineQuantity({line}: {line: CartLine}) {
             name="increase-quantity"
             value={nextQuantity}
             disabled={!!isOptimistic}
-            className="px-2 py-1 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-r-lg"
+            className={`hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-r-lg ${
+              isAside ? 'px-2.5 py-1.5 flex-1' : 'px-2 py-1'
+            }`}
           >
-            <span className="text-lg">&#43;</span>
+            <span className={isAside ? 'text-base' : 'text-lg'}>&#43;</span>
           </button>
         </CartLineUpdateButton>
       </div>
-      <CartLineRemoveButton lineIds={[lineId]} disabled={!!isOptimistic} />
+      <CartLineRemoveButton
+        lineIds={[lineId]}
+        disabled={!!isOptimistic}
+        layout={layout}
+      />
     </div>
   );
 }
@@ -129,10 +177,14 @@ function CartLineQuantity({line}: {line: CartLine}) {
 function CartLineRemoveButton({
   lineIds,
   disabled,
+  layout,
 }: {
   lineIds: string[];
   disabled: boolean;
+  layout: CartLayout;
 }) {
+  const isAside = layout === 'aside';
+
   return (
     <CartForm
       fetcherKey={getUpdateKey(lineIds)}
@@ -140,13 +192,16 @@ function CartLineRemoveButton({
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button 
-        disabled={disabled} 
+      <Button
+        disabled={disabled}
         type="submit"
-        className="px-3 py-1 text-xs text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        variant="ghost"
+        size="icon"
+        className="text-destructive hover:text-destructive/80 hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Remove item"
       >
-        Remove
-      </button>
+        <Trash2 className="w-4 h-4" />
+      </Button>
     </CartForm>
   );
 }

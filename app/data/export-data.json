@@ -1,0 +1,277 @@
+{
+  "success": true,
+  "message": "Data fetched successfully. Use ?type=products or ?type=collections to download specific files.",
+  "productsCount": 15,
+  "collectionsCount": 3,
+  "downloadUrls": {
+    "products": "/api/export-data?type=products",
+    "collections": "/api/export-data?type=collections"
+  },
+  "data": {
+    "products": [
+      {
+        "id": "gid://shopify/Product/8275108987063",
+        "title": "The Inventory Not Tracked Snowboard",
+        "handle": "the-inventory-not-tracked-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "949.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952431287",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/snowboard_purple_hydrogen.png?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows a centred hexagonal logo for Hydrogen that\n          appears to radiate outwards, as well as some overlapping hexagons at the bottom. The bottom view shows an\n          abstract angular grid in purples.",
+          "width": 3097,
+          "height": 3908
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109019831",
+        "title": "Gift Card",
+        "handle": "gift-card",
+        "priceRange": {
+          "minVariantPrice": {"amount": "10.0", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952464055",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/gift_card.png?v=1761831847",
+          "altText": "Gift card that shows text: Generated data gift card",
+          "width": 2881,
+          "height": 2881
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109052599",
+        "title": "The Compare at Price Snowboard",
+        "handle": "the-compare-at-price-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "785.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952529591",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/snowboard_sky.png?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows pixelated clouds, with the top-most one being\n        the shape of the Shopify bag logo. The bottom view has a pixelated cloudy sky with blue, pink and purple\n        colours.",
+          "width": 3097,
+          "height": 3908
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109085367",
+        "title": "The Minimal Snowboard",
+        "handle": "the-minimal-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "885.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43611151696055",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Gemini_Generated_Image_e7jfpbe7jfpbe7jf.png?v=1762278894",
+          "altText": null,
+          "width": 1024,
+          "height": 1024
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109183671",
+        "title": "The Out of Stock Snowboard",
+        "handle": "the-out-of-stock-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "885.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952627895",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_f44a9605-cd62-464d-b095-d45cdaa0d0d7.jpg?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows a toggle at the top in shades of blue and\n        yellow. The bottom view shows an abstract illustration of toggles in blues and yellows.",
+          "width": 3908,
+          "height": 3908
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109216439",
+        "title": "The Collection Snowboard: Hydrogen",
+        "handle": "the-collection-snowboard-hydrogen",
+        "priceRange": {
+          "minVariantPrice": {"amount": "600.0", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952660663",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_0a40b01b-5021-48c1-80d1-aa8ab4876d3d.jpg?v=1761831846",
+          "altText": "Top and bottom view of a snowboard. The top view shows stylized hydrogen bonds and the bottom view shows \"H2\" in a brush script typeface.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109249207",
+        "title": "The Videographer Snowboard",
+        "handle": "the-videographer-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "885.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952758967",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main.jpg?v=1761831846",
+          "altText": "The top and bottom view of a snowboard. The top has view is turquoise and black with graphics of\n        trees. The bottom view is turquoise with the word hydrogen written in cursive.",
+          "width": 1024,
+          "height": 1024
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109281975",
+        "title": "The Complete Snowboard",
+        "handle": "the-complete-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "699.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952726199",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_589fc064-24a2-4236-9eaf-13b2bd35d21d.jpg?v=1761831846",
+          "altText": "Top and bottom view of a snowboard. The top view shows abstract circles and lines in shades of\n          teal. The bottom view shows abstract circles and lines in shades of purple and blue with the text “SHOPIFY”\n          in a sans serif typeface on top.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109314743",
+        "title": "The Hidden Snowboard",
+        "handle": "the-hidden-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "749.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952824503",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_c8ff0b5d-c712-429a-be00-b29bd55cbc9d.jpg?v=1761831846",
+          "altText": "The top view and bottom view of a snowboard. The top view is black with a singular peach cube.\n        The bottom view has a graphic of a stack of blocks in a gradient from light blue, to pink to peach.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109347511",
+        "title": "Selling Plans Ski Wax",
+        "handle": "selling-plans-ski-wax",
+        "priceRange": {
+          "minVariantPrice": {"amount": "9.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952857271",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/snowboard_wax.png?v=1761831847",
+          "altText": "A bar of golden yellow wax",
+          "width": 2881,
+          "height": 2881
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109445815",
+        "title": "The Multi-location Snowboard",
+        "handle": "the-multi-location-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "729.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952955575",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_0a4e9096-021a-4c1e-8750-24b233166a12.jpg?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows a pixelated Shopify bag logo and a\n        pixelated character reviewing a clipboard with a questioning expression with a bright green-blue background.\n        The bottom view is a pattern of many pixel characters with a bright green-blue background.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109478583",
+        "title": "The Collection Snowboard: Oxygen",
+        "handle": "the-collection-snowboard-oxygen",
+        "priceRange": {
+          "minVariantPrice": {"amount": "1025.0", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579952988343",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_d624f226-0a89-4fe1-b333-0d1548b43c06.jpg?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows a stylized scene of trees, mountains, sky and a sun in red colours. The bottom view has blue wavy lines in the background with the text \"Oxygen\" in a stylized script typeface.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109511351",
+        "title": "The 3p Fulfilled Snowboard",
+        "handle": "the-3p-fulfilled-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "2629.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579953021111",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_b9e0da7f-db89-4d41-83f0-7f417b02831d.jpg?v=1761831847",
+          "altText": "Top and bottom view of a snowboard. The top view shows 7 stacked hexagons and the bottom view\n          shows a small, centred hexagonal logo for Hydrogen.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109544119",
+        "title": "The Multi-managed Snowboard",
+        "handle": "the-multi-managed-snowboard",
+        "priceRange": {
+          "minVariantPrice": {"amount": "629.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579953053879",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_9129b69a-0c7b-4f66-b6cf-c4222f18028a.jpg?v=1761831848",
+          "altText": "Top and bottom view of a snowboard. The top view shows an illustration with varied outlined shapes\n        in black. The bottom view shows a black box character with an H pointing, and surrounded by black outlined\n        illustrative elements.",
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      {
+        "id": "gid://shopify/Product/8275109609655",
+        "title": "The Collection Snowboard: Liquid",
+        "handle": "the-collection-snowboard-liquid",
+        "priceRange": {
+          "minVariantPrice": {"amount": "749.95", "currencyCode": "USD"}
+        },
+        "featuredImage": {
+          "id": "gid://shopify/ProductImage/43579953086647",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/files/Main_b13ad453-477c-4ed1-9b43-81f3345adfd6.jpg?v=1761831848",
+          "altText": "Top and bottom view of a snowboard. The top view shows a stylized scene of water, trees, mountains, sky and a moon in blue colours. The bottom view has a blue liquid, drippy background with the text \"liquid\" in a stylized script typeface.",
+          "width": 1600,
+          "height": 1600
+        }
+      }
+    ],
+    "collections": [
+      {
+        "id": "gid://shopify/Collection/318752981175",
+        "title": "Home page",
+        "handle": "frontpage",
+        "image": {
+          "id": "gid://shopify/CollectionImage/1731532292279",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/collections/Gemini_Generated_Image_xt64z4xt64z4xt64.png?v=1762277947",
+          "altText": null,
+          "width": 1632,
+          "height": 640
+        }
+      },
+      {
+        "id": "gid://shopify/Collection/318753079479",
+        "title": "Automated Collection",
+        "handle": "automated-collection",
+        "image": {
+          "id": "gid://shopify/CollectionImage/1731531899063",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/collections/Gemini_Generated_Image_8e5bdv8e5bdv8e5b.png?v=1762277649",
+          "altText": null,
+          "width": 1632,
+          "height": 640
+        }
+      },
+      {
+        "id": "gid://shopify/Collection/318753112247",
+        "title": "Hydrogen",
+        "handle": "hydrogen",
+        "image": {
+          "id": "gid://shopify/CollectionImage/1731531702455",
+          "url": "https://cdn.shopify.com/s/files/1/0718/2535/9031/collections/Gemini_Generated_Image_um7n3ium7n3ium7n.png?v=1762276828",
+          "altText": null,
+          "width": 1632,
+          "height": 640
+        }
+      }
+    ]
+  }
+}

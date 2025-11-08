@@ -1,146 +1,130 @@
-import {Suspense} from 'react';
-import {Await, useRouteLoaderData} from 'react-router';
+import {useLoaderData, data, type HeadersFunction} from 'react-router';
 import type {Route} from './+types/cart';
-import type {RootLoader} from '~/root';
-import {CartMain} from '~/components/CartMain';
+import type {CartQueryDataReturn} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
+import {CartMain} from '~/components/CartMain';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: 'Cart | Hydrogen'}];
 };
 
+export const headers: HeadersFunction = ({actionHeaders}) => actionHeaders;
+
 export async function action({request, context}: Route.ActionArgs) {
   const {cart} = context;
   const formData = await request.formData();
-  
-  // CartForm sends the action as a form field
-  const cartAction = formData.get('cartAction') as string;
+  const {action, inputs} = CartForm.getFormInput(formData);
 
-  if (!cartAction) {
-    return new Response('Missing cart action', {status: 400});
+  if (!action) {
+    throw new Error('No action provided');
   }
 
-  let result;
+  let status = 200;
+  let result: CartQueryDataReturn;
 
-  try {
-    switch (cartAction) {
-      case CartForm.ACTIONS.LinesAdd: {
-        const linesInput = formData.get('lines');
-        const lines = typeof linesInput === 'string' 
-          ? JSON.parse(linesInput) 
-          : linesInput;
-        result = await cart.addLines(Array.isArray(lines) ? lines : [lines]);
-        break;
-      }
-      case CartForm.ACTIONS.LinesUpdate: {
-        const linesInput = formData.get('lines');
-        const lines = typeof linesInput === 'string' 
-          ? JSON.parse(linesInput) 
-          : linesInput;
-        result = await cart.updateLines(Array.isArray(lines) ? lines : [lines]);
-        break;
-      }
-      case CartForm.ACTIONS.LinesRemove: {
-        const lineIdsInput = formData.get('lineIds');
-        const lineIds = typeof lineIdsInput === 'string' 
-          ? JSON.parse(lineIdsInput) 
-          : lineIdsInput;
-        result = await cart.removeLines(Array.isArray(lineIds) ? lineIds : [lineIds]);
-        break;
-      }
-      case CartForm.ACTIONS.NoteUpdate: {
-        const note = formData.get('note') as string;
-        result = await cart.updateNote(note);
-        break;
-      }
-      case CartForm.ACTIONS.DiscountCodesUpdate: {
-        const discountCodesInput = formData.get('discountCodes');
-        const discountCodes = typeof discountCodesInput === 'string' 
-          ? JSON.parse(discountCodesInput) 
-          : discountCodesInput;
-        result = await cart.updateDiscountCodes(
-          Array.isArray(discountCodes) ? discountCodes : [discountCodes]
-        );
-        break;
-      }
-      case CartForm.ACTIONS.BuyerIdentityUpdate: {
-        const buyerIdentityInput = formData.get('buyerIdentity');
-        const buyerIdentity = typeof buyerIdentityInput === 'string' 
-          ? JSON.parse(buyerIdentityInput) 
-          : buyerIdentityInput;
-        result = await cart.updateBuyerIdentity(buyerIdentity);
-        break;
-      }
-      case CartForm.ACTIONS.CartAttributesUpdate: {
-        const attributesInput = formData.get('attributes');
-        const attributes = typeof attributesInput === 'string' 
-          ? JSON.parse(attributesInput) 
-          : attributesInput;
-        result = await cart.updateCartAttributes(attributes);
-        break;
-      }
-      case CartForm.ACTIONS.SelectedDeliveryOptionsUpdate: {
-        const selectedDeliveryOptionsInput = formData.get('selectedDeliveryOptions');
-        const selectedDeliveryOptions = typeof selectedDeliveryOptionsInput === 'string' 
-          ? JSON.parse(selectedDeliveryOptionsInput) 
-          : selectedDeliveryOptionsInput;
-        result = await cart.updateSelectedDeliveryOptions(selectedDeliveryOptions);
-        break;
-      }
-      case CartForm.ACTIONS.MetafieldsSet: {
-        const metafieldsInput = formData.get('metafields');
-        const metafields = typeof metafieldsInput === 'string' 
-          ? JSON.parse(metafieldsInput) 
-          : metafieldsInput;
-        result = await cart.setMetafields(
-          Array.isArray(metafields) ? metafields : [metafields]
-        );
-        break;
-      }
-      case CartForm.ACTIONS.GiftCardCodesUpdate: {
-        const giftCardCodesInput = formData.get('giftCardCodes');
-        const giftCardCodes = typeof giftCardCodesInput === 'string' 
-          ? JSON.parse(giftCardCodesInput) 
-          : giftCardCodesInput;
-        result = await cart.updateGiftCardCodes(
-          Array.isArray(giftCardCodes) ? giftCardCodes : [giftCardCodes]
-        );
-        break;
-      }
-      case CartForm.ACTIONS.GiftCardCodesRemove: {
-        const giftCardCodesInput = formData.get('giftCardCodes');
-        const giftCardCodes = typeof giftCardCodesInput === 'string' 
-          ? JSON.parse(giftCardCodesInput) 
-          : giftCardCodesInput;
-        result = await cart.removeGiftCardCodes(
-          Array.isArray(giftCardCodes) ? giftCardCodes : [giftCardCodes]
-        );
-        break;
-      }
-      default:
-        return new Response('Invalid cart action', {status: 400});
+  switch (action) {
+    case CartForm.ACTIONS.LinesAdd:
+      result = await cart.addLines(inputs.lines);
+      break;
+    case CartForm.ACTIONS.LinesUpdate:
+      result = await cart.updateLines(inputs.lines);
+      break;
+    case CartForm.ACTIONS.LinesRemove:
+      result = await cart.removeLines(inputs.lineIds);
+      break;
+    case CartForm.ACTIONS.DiscountCodesUpdate: {
+      const formDiscountCode = inputs.discountCode;
+      // User inputted discount code
+      const discountCodes = (
+        formDiscountCode ? [formDiscountCode] : []
+      ) as string[];
+      // Combine discount codes already applied on cart
+      const existingCodes = Array.isArray(inputs.discountCodes) 
+        ? inputs.discountCodes 
+        : inputs.discountCodes 
+          ? [inputs.discountCodes] 
+          : [];
+      discountCodes.push(...existingCodes);
+      result = await cart.updateDiscountCodes(discountCodes);
+      break;
     }
-
-    if (result?.error) {
-      return new Response(JSON.stringify(result), {
-        status: 400,
-        headers: {'Content-Type': 'application/json'},
+    case CartForm.ACTIONS.GiftCardCodesUpdate: {
+      const formGiftCardCode = inputs.giftCardCode;
+      // User inputted gift card code
+      const giftCardCodes = (
+        formGiftCardCode ? [formGiftCardCode] : []
+      ) as string[];
+      // Combine gift card codes already applied on cart
+      const existingCodes = Array.isArray(inputs.giftCardCodes) 
+        ? inputs.giftCardCodes 
+        : inputs.giftCardCodes 
+          ? [inputs.giftCardCodes] 
+          : [];
+      giftCardCodes.push(...existingCodes);
+      result = await cart.updateGiftCardCodes(giftCardCodes);
+      break;
+    }
+    case CartForm.ACTIONS.GiftCardCodesRemove: {
+      const appliedGiftCardIds = inputs.giftCardCodes as string[];
+      result = await cart.removeGiftCardCodes(appliedGiftCardIds);
+      break;
+    }
+    case CartForm.ACTIONS.BuyerIdentityUpdate: {
+      result = await cart.updateBuyerIdentity({
+        ...inputs.buyerIdentity,
       });
+      break;
     }
-
-    return result;
-  } catch (error) {
-    console.error('Cart action error:', error);
-    return new Response(
-      JSON.stringify({error: 'Failed to process cart action'}),
-      {status: 500, headers: {'Content-Type': 'application/json'}}
-    );
+    case CartForm.ACTIONS.NoteUpdate: {
+      result = await cart.updateNote(inputs.note);
+      break;
+    }
+    case CartForm.ACTIONS.CartAttributesUpdate: {
+      result = await cart.updateCartAttributes(inputs.attributes);
+      break;
+    }
+    case CartForm.ACTIONS.SelectedDeliveryOptionsUpdate: {
+      result = await cart.updateSelectedDeliveryOptions(inputs.selectedDeliveryOptions);
+      break;
+    }
+    case CartForm.ACTIONS.MetafieldsSet: {
+      result = await cart.setMetafields(inputs.metafields);
+      break;
+    }
+    default:
+      throw new Error(`${action} cart action is not defined`);
   }
+
+  const cartId = result?.cart?.id;
+  const headers = cartId ? cart.setCartId(result.cart.id) : new Headers();
+  const {cart: cartResult, errors, warnings} = result;
+
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string') {
+    status = 303;
+    headers.set('Location', redirectTo);
+  }
+
+  return data(
+    {
+      cart: cartResult,
+      errors,
+      warnings,
+      analytics: {
+        cartId,
+      },
+    },
+    {status, headers},
+  );
+}
+
+export async function loader({context}: Route.LoaderArgs) {
+  const {cart} = context;
+  return await cart.get();
 }
 
 export default function Cart() {
-  const data = useRouteLoaderData<RootLoader>('root');
-  const cart = data?.cart;
+  const cart = useLoaderData<typeof loader>();
 
   return (
     <div className="cart min-h-full bg-background py-8 md:py-10">
@@ -151,18 +135,7 @@ export default function Cart() {
             Review your items and proceed to checkout when you're ready
           </p>
         </div>
-        <Suspense
-          fallback={
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              <p className="text-muted-foreground">Loading your cart...</p>
-            </div>
-          }
-        >
-          <Await resolve={cart}>
-            {(cartData) => <CartMain cart={cartData} layout="page" />}
-          </Await>
-        </Suspense>
+        <CartMain layout="page" cart={cart} />
       </div>
     </div>
   );

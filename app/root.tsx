@@ -16,6 +16,7 @@ import globalsStyles from '~/styles/globals.css?url';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 import {PageLayout} from './components/pageLayout';
 import {NotFoundPage} from './components/404';
+import {ErrorPage} from './components/ErrorPage';
 
 export type RootLoader = typeof loader;
 
@@ -180,11 +181,11 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
   const data = useRouteLoaderData<RootLoader>('root');
-  let errorMessage = 'Unknown error';
+  let errorMessage: string | undefined;
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error?.data?.message ?? error.data;
+    errorMessage = error?.data?.message ?? (typeof error.data === 'string' ? error.data : undefined);
     errorStatus = error.status;
   } else if (error instanceof Error) {
     errorMessage = error.message;
@@ -208,16 +209,25 @@ export function ErrorBoundary() {
     return <NotFoundPage />;
   }
 
-  // For other errors, show error details
+  // For other errors, show error page with PageLayout
+  if (data) {
+    return (
+      <Analytics.Provider
+        cart={data.cart}
+        shop={data.shop}
+        consent={data.consent}
+      >
+        <PageLayout {...data}>
+          <ErrorPage status={errorStatus} message={errorMessage} error={error} />
+        </PageLayout>
+      </Analytics.Provider>
+    );
+  }
+
+  // Fallback if no root data is available
   return (
-    <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <ErrorPage status={errorStatus} message={errorMessage} error={error} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import {useNavigate, useFetcher} from 'react-router';
 import {Image, Money} from '@shopify/hydrogen';
-import React, {useEffect, useState, useRef} from 'react';
+import {useEffect, useState, useRef, useCallback} from 'react';
 import {Package, Layers} from 'lucide-react';
 import {
   Command,
@@ -46,22 +46,35 @@ export function SearchCommand({open, onOpenChange}: SearchCommandProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const isNavigatingRef = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset search term when dialog closes
   useEffect(() => {
     if (!open) {
       setSearchTerm('');
+      isNavigatingRef.current = false;
     }
   }, [open]);
 
   // Fetch search results when search term changes (debounced)
   useEffect(() => {
+    // Don't trigger search if we're navigating
+    if (isNavigatingRef.current) {
+      return;
+    }
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (searchTerm.trim()) {
+    // Check if the search term matches a default suggestion title
+    const isDefaultSuggestion = DEFAULT_SUGGESTIONS.some(
+      (suggestion) => suggestion.title === searchTerm.trim(),
+    );
+
+    if (searchTerm.trim() && !isDefaultSuggestion) {
       // Debounce the search to avoid too many requests
       searchTimeoutRef.current = setTimeout(() => {
         void fetcher.submit(
@@ -84,14 +97,18 @@ export function SearchCommand({open, onOpenChange}: SearchCommandProps) {
 
   const {articles, collections, pages, products} = items;
 
-  const hasSearchTerm = searchTerm.trim().length > 0;
+  // Get current input value for display logic
+  const currentInputValue = inputRef.current?.value || searchTerm;
+  const hasSearchTerm =
+    currentInputValue.trim().length > 0 || searchTerm.trim().length > 0;
   const isLoading = fetcher.state === 'loading' && hasSearchTerm;
   const hasResults = total > 0 && !isLoading;
   const showDefaultSuggestions = !hasSearchTerm && !isLoading;
 
   const handleSelect = (url: string) => {
-    onOpenChange(false);
+    isNavigatingRef.current = true;
     setSearchTerm('');
+    onOpenChange(false);
     void navigate(url);
   };
 
@@ -104,6 +121,29 @@ export function SearchCommand({open, onOpenChange}: SearchCommandProps) {
     }
   };
 
+  const handleValueChange = (value: string) => {
+    // Reset navigation flag when user starts typing
+    if (isNavigatingRef.current && value.trim().length > 0) {
+      isNavigatingRef.current = false;
+    }
+
+    // Don't update search term if it's a default suggestion title
+    const isDefaultSuggestion = DEFAULT_SUGGESTIONS.some(
+      (suggestion) => suggestion.title === value.trim(),
+    );
+
+    if (!isDefaultSuggestion) {
+      setSearchTerm(value);
+    }
+  };
+
+  // Reset input value when dialog closes
+  useEffect(() => {
+    if (!open && inputRef.current) {
+      inputRef.current.value = '';
+    }
+  }, [open]);
+
   return (
     <CommandDialog
       open={open}
@@ -111,12 +151,12 @@ export function SearchCommand({open, onOpenChange}: SearchCommandProps) {
       title="Search Products"
       description="Search for products, collections, and more..."
     >
-      <Command
-        shouldFilter={false}
-        value={searchTerm}
-        onValueChange={setSearchTerm}
-      >
-        <CommandInput placeholder="Search for products, collections, and more..." />
+      <Command shouldFilter={false}>
+        <CommandInput
+          placeholder="Search for products, collections, and more..."
+          onValueChange={handleValueChange}
+          value={searchTerm}
+        />
         <CommandList>
           {/* Default Suggestions - Show when no search term */}
           {showDefaultSuggestions && (
@@ -335,7 +375,7 @@ export function SearchCommand({open, onOpenChange}: SearchCommandProps) {
                   >
                     <span>
                       View all {total} result{total !== 1 ? 's' : ''} for &quot;
-                      {searchTerm}&quot; →
+                      {currentInputValue || searchTerm}&quot; →
                     </span>
                   </CommandItem>
                 </div>

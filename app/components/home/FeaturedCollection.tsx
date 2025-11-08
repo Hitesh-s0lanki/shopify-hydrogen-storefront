@@ -5,8 +5,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '~/components/ui/carousel';
 import {Button} from '~/components/ui/button';
 import {ArrowRight} from 'lucide-react';
@@ -68,9 +66,7 @@ export function FeaturedCollection({collection}: FeaturedCollectionProps) {
                   </div>
                 </Link>
               </CarouselItem>
-            </CarouselContent>
-            <CarouselPrevious className="left-4 bg-background/80 backdrop-blur-sm hover:bg-background" />
-            <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm hover:bg-background" />
+            </CarouselContent>{' '}
           </Carousel>
         </div>
       </div>
