@@ -88,24 +88,17 @@ export function PageLayout({
                       {/* Animated Icon Container */}
                       <div className="relative shrink-0">
                         <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-lg animate-pulse" />
-                        <div className="relative flex items-center justify-center size-10 rounded-full bg-gradient-to-br from-emerald-500/20 via-green-500/20 to-teal-500/20 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                          <Sparkles className="size-5 text-emerald-500 dark:text-emerald-400" />
+                        <div className="relative flex items-center justify-center size-8 rounded-full bg-gradient-to-br from-emerald-500/20 via-green-500/20 to-teal-500/20 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                          <Sparkles className="size-4 text-emerald-500 dark:text-emerald-400" />
                         </div>
                       </div>
 
                       {/* Title and Badge */}
-                      <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
-                          <h2 className="text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                            AI Assistant
+                          <h2 className="text-md font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                            Shopsy Assistant
                           </h2>
-                          <Badge
-                            variant="secondary"
-                            className="text-xs px-1.5 py-0 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                          >
-                            <Zap className="size-2.5 mr-1" />
-                            Active
-                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground truncate">
                           Powered by AI

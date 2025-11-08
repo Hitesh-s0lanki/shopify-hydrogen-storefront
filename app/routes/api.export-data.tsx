@@ -88,13 +88,13 @@ export async function loader({context, request}: Route.LoaderArgs) {
 /**
  * Fetch all products from Shopify with pagination
  */
-async function fetchAllProducts(storefront: any) {
+export async function fetchAllProducts(storefront: any) {
   const allProducts: any[] = [];
   let hasNextPage = true;
   let cursor: string | null = null;
 
   while (hasNextPage) {
-    const response = await storefront.query(PRODUCTS_QUERY, {
+    const response: any = await storefront.query(PRODUCTS_QUERY, {
       variables: {
         first: 250, // Maximum allowed by Shopify
         after: cursor,
@@ -116,13 +116,13 @@ async function fetchAllProducts(storefront: any) {
 /**
  * Fetch all collections from Shopify with pagination
  */
-async function fetchAllCollections(storefront: any) {
+export async function fetchAllCollections(storefront: any) {
   const allCollections: any[] = [];
   let hasNextPage = true;
   let cursor: string | null = null;
 
   while (hasNextPage) {
-    const response = await storefront.query(COLLECTIONS_QUERY, {
+    const response: any = await storefront.query(COLLECTIONS_QUERY, {
       variables: {
         first: 250, // Maximum allowed by Shopify
         after: cursor,

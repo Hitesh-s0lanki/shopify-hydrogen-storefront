@@ -1,4 +1,14 @@
-import {Loader2, Bot, User, Sparkles, Lightbulb, ShoppingBag, HelpCircle, Search} from 'lucide-react';
+import {
+  Loader2,
+  Bot,
+  User,
+  Sparkles,
+  Lightbulb,
+  ShoppingBag,
+  HelpCircle,
+  Search,
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import type {Message} from './ChatComponent';
 
 type Props = {
@@ -7,7 +17,7 @@ type Props = {
   onSuggestionClick?: (suggestion: string) => void;
 };
 
-export function MessageList({messages, isLoading}: Props) {
+export function MessageList({messages, isLoading, onSuggestionClick}: Props) {
   if (isLoading && messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 gap-4">
@@ -59,7 +69,8 @@ export function MessageList({messages, isLoading}: Props) {
             Start a conversation
           </h3>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Ask me anything! I'm here to help you with questions, suggestions, and more.
+            Ask me anything! I&apos;m here to help you with questions,
+            suggestions, and more.
           </p>
         </div>
 
@@ -74,12 +85,12 @@ export function MessageList({messages, isLoading}: Props) {
               return (
                 <button
                   key={index}
-                  onClick={() => onSuggestionClick?.(suggestion.text)}
+                  onClick={() => onSuggestionClick?.(suggestion.text ?? '')}
                   className="group relative flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted border border-emerald-500/10 hover:border-emerald-500/30 transition-all duration-200 text-left hover:shadow-md hover:shadow-emerald-500/10"
                 >
                   {/* Glow effect on hover */}
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-green-500/0 to-teal-500/0 group-hover:from-emerald-500/5 group-hover:via-green-500/5 group-hover:to-teal-500/5 rounded-xl transition-all duration-200" />
-                  
+
                   {/* Icon */}
                   <div className="relative shrink-0">
                     <div className="absolute inset-0 bg-emerald-500/10 rounded-lg blur-sm group-hover:bg-emerald-500/20 transition-colors" />
@@ -87,7 +98,7 @@ export function MessageList({messages, isLoading}: Props) {
                       <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
                   </div>
-                  
+
                   {/* Text */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
@@ -97,7 +108,7 @@ export function MessageList({messages, isLoading}: Props) {
                       {suggestion.category}
                     </p>
                   </div>
-                  
+
                   {/* Arrow indicator */}
                   <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg
@@ -149,7 +160,15 @@ export function MessageList({messages, isLoading}: Props) {
                 : 'bg-muted/80 backdrop-blur-sm border border-emerald-500/10 text-foreground'
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+            {message.role === 'assistant' ? (
+              <div className="text-sm leading-relaxed [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-2 [&_h1]:mt-3 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-3 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-3 [&_p]:my-2 [&_p]:text-foreground [&_ul]:my-2 [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:my-1 [&_strong]:font-semibold [&_strong]:text-foreground [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_pre]:bg-muted [&_pre]:border [&_pre]:border-border [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-emerald-500 [&_blockquote]:pl-4 [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_a]:text-emerald-600 dark:[&_a]:text-emerald-400 [&_a]:no-underline hover:[&_a]:underline">
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
+            ) : (
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                {message.content}
+              </p>
+            )}
           </div>
 
           {/* Avatar for user messages */}
@@ -173,7 +192,9 @@ export function MessageList({messages, isLoading}: Props) {
           <div className="bg-muted/80 backdrop-blur-sm border border-emerald-500/10 rounded-2xl px-4 py-3 shadow-sm">
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-              <span className="text-xs text-muted-foreground">AI is thinking...</span>
+              <span className="text-xs text-muted-foreground">
+                AI is thinking...
+              </span>
             </div>
           </div>
         </div>
@@ -181,4 +202,3 @@ export function MessageList({messages, isLoading}: Props) {
     </div>
   );
 }
-

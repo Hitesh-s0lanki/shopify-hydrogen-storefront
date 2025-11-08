@@ -11,8 +11,6 @@ import type {HydrogenEnv} from '@shopify/hydrogen';
 declare global {
   interface Env extends HydrogenEnv {
     OPENAI_API_KEY?: string;
-    PINECONE_API_KEY?: string;
-    PINECONE_INDEX?: string;
-    PINECONE_INDEX_HOST?: string;
+    PUBLIC_SITE_URL?: string;
   }
 }

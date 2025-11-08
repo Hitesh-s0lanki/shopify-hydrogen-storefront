@@ -1,7 +1,7 @@
 import {useState, useEffect, useRef} from 'react';
 import {Input} from '~/components/ui/input';
 import {Button} from '~/components/ui/button';
-import {Send, Sparkles, Bot, Loader2} from 'lucide-react';
+import {Send, Loader2} from 'lucide-react';
 import {MessageList} from './MessageList';
 
 // Custom stream parser for Vercel AI SDK data stream format
@@ -30,7 +30,10 @@ async function* parseDataStream(
 
         const jsonStr = line.slice(colonIndex + 1);
         try {
-          const data = JSON.parse(jsonStr);
+          const data = JSON.parse(jsonStr) as {
+            type: string;
+            textDelta?: string;
+          };
           if (data.type === 'text-delta' && data.textDelta) {
             yield {type: 'text-delta', textDelta: data.textDelta};
           } else if (data.type === 'finish') {
@@ -48,7 +51,10 @@ async function* parseDataStream(
       if (colonIndex !== -1) {
         const jsonStr = buffer.slice(colonIndex + 1);
         try {
-          const data = JSON.parse(jsonStr);
+          const data = JSON.parse(jsonStr) as {
+            type: string;
+            textDelta?: string;
+          };
           if (data.type === 'text-delta' && data.textDelta) {
             yield {type: 'text-delta', textDelta: data.textDelta};
           } else if (data.type === 'finish') {
@@ -99,12 +105,8 @@ export function ChatComponent({
         },
         body: JSON.stringify({chatId}),
       })
-        .then((res) => res.json())
-        .then((data: Message[]) => {
-          if (Array.isArray(data)) {
-            setMessages(data);
-          }
-        })
+        .then((res) => res.json() as unknown as Message[])
+        .then((data) => setMessages(data))
         .catch((error) => {
           console.error('Error loading messages:', error);
         })
@@ -166,7 +168,7 @@ export function ChatComponent({
 
       // Handle streaming response
       let fullContent = '';
-      
+
       if (!response.body) {
         throw new Error('Response body is null');
       }
@@ -232,15 +234,20 @@ export function ChatComponent({
       </div>
 
       {/* message list - scrollable area */}
-      <div ref={scrollAreaRef} className="relative flex-1 overflow-y-auto min-h-0">
-        <MessageList 
-          messages={messages} 
+      <div
+        ref={scrollAreaRef}
+        className="relative flex-1 overflow-y-auto min-h-0"
+      >
+        <MessageList
+          messages={messages}
           isLoading={isLoadingMessages || isLoading}
           onSuggestionClick={(suggestion) => {
             setInput(suggestion);
             // Auto-focus input after setting suggestion
             setTimeout(() => {
-              const inputElement = document.querySelector('input[placeholder="Ask any question..."]') as HTMLInputElement;
+              const inputElement = document.querySelector(
+                'input[placeholder="Ask any question..."]',
+              ) as HTMLInputElement;
               inputElement?.focus();
             }, 0);
           }}
@@ -249,12 +256,15 @@ export function ChatComponent({
 
       {/* Enhanced Input Area */}
       <form
-        onSubmit={handleSubmit}
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit(e);
+        }}
         className="relative sticky bottom-0 inset-x-0 p-4 bg-gradient-to-t from-background via-background to-transparent border-t border-emerald-500/10 z-10 shrink-0"
       >
         {/* Glow effect at top of input area */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
-        
+
         <div className="flex gap-2 items-end">
           <div className="relative flex-1">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-green-500/5 to-teal-500/5 rounded-lg blur-sm" />
@@ -266,8 +276,8 @@ export function ChatComponent({
               disabled={isLoading}
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isLoading || !input.trim()}
             className="shrink-0 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -282,4 +292,3 @@ export function ChatComponent({
     </div>
   );
 }
-

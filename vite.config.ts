@@ -30,9 +30,20 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: ['set-cookie-parser', 'cookie', 'react-router'],
+      include: [
+        'set-cookie-parser',
+        'cookie',
+        'react-router',
+        'react-markdown',
+        'style-to-js',
+        'hast-util-to-jsx-runtime',
+      ],
     },
-    noExternal: ['@pinecone-database/pinecone'],
+    /**
+     * Bundle these dependencies for SSR (Cloudflare Workers ESM environment)
+     * instead of treating them as external modules
+     */
+    noExternal: ['react-markdown', 'style-to-js', 'hast-util-to-jsx-runtime'],
   },
   server: {
     allowedHosts: ['.tryhydrogen.dev'],
