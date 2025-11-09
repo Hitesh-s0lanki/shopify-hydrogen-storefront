@@ -1,7 +1,8 @@
 import {useOptimisticCart} from '@shopify/hydrogen';
 import {Link} from 'react-router';
+import {ShoppingBag, ArrowRight, Sparkles} from 'lucide-react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
-import {useAside} from '~/components/Aside';
+import {Button} from '~/components/ui/button';
 import {CartLineItem} from '~/components/CartLineItem';
 import {CartSummary} from './CartSummary';
 
@@ -31,9 +32,9 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
   return (
     <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
-      <div className="cart-details">
-        <div aria-labelledby="cart-lines">
-          <ul>
+      <div className="cart-details flex flex-col gap-6">
+        <div aria-labelledby="cart-lines" className="flex-1">
+          <ul className="space-y-4">
             {(cart?.lines?.nodes ?? []).map((line) => (
               <CartLineItem key={line.id} line={line} layout={layout} />
             ))}
@@ -51,18 +52,61 @@ function CartEmpty({
   hidden: boolean;
   layout?: CartMainProps['layout'];
 }) {
-  const {close} = useAside();
   return (
-    <div hidden={hidden}>
-      <br />
-      <p>
-        Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-        started!
+    <div 
+      hidden={hidden}
+      className="flex flex-col items-center justify-center py-16 px-6 text-center"
+    >
+      <div className="relative mb-6">
+        <div className="p-6 rounded-full bg-muted/50">
+          <ShoppingBag className="size-12 text-muted-foreground" />
+        </div>
+        <div className="absolute -top-1 -right-1 p-1.5 rounded-full bg-primary/10">
+          <Sparkles className="size-4 text-primary" />
+        </div>
+      </div>
+      <h3 className="text-2xl font-bold mb-2">Your cart is empty</h3>
+      <p className="text-muted-foreground mb-6 max-w-sm">
+        Looks like you haven&rsquo;t added anything yet. Let&rsquo;s get you started with some amazing products!
       </p>
-      <br />
-      <Link to="/collections" onClick={close} prefetch="viewport">
-        Continue shopping →
-      </Link>
+      <Button asChild className="gap-2">
+        <Link to="/collections" prefetch="viewport">
+          Start Shopping
+          <ArrowRight className="size-4" />
+        </Link>
+      </Button>
+      <div className="mt-8 pt-8 border-t w-full max-w-sm">
+        <p className="text-sm text-muted-foreground mb-4">✨ Why shop with us?</p>
+        <div className="grid grid-cols-1 gap-3 text-left">
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 rounded bg-primary/10 mt-0.5">
+              <Sparkles className="size-3.5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Free Shipping</p>
+              <p className="text-xs text-muted-foreground">On orders over $50</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 rounded bg-primary/10 mt-0.5">
+              <Sparkles className="size-3.5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Easy Returns</p>
+              <p className="text-xs text-muted-foreground">30-day return policy</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="p-1.5 rounded bg-primary/10 mt-0.5">
+              <Sparkles className="size-3.5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Secure Checkout</p>
+              <p className="text-xs text-muted-foreground">Your data is protected</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

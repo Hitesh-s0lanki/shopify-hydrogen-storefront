@@ -5,3 +5,12 @@
 
 // Enhance TypeScript's built-in typings.
 import '@total-typescript/ts-reset';
+import type {HydrogenEnv} from '@shopify/hydrogen';
+
+// Extend the Env interface to include API keys
+declare global {
+  interface Env extends HydrogenEnv {
+    OPENAI_API_KEY?: string;
+    PUBLIC_SITE_URL?: string;
+  }
+}

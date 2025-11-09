@@ -9,3 +9,4 @@ export async function loader() {
 export async function action({context}: Route.ActionArgs) {
   return context.customerAccount.logout();
 }
+

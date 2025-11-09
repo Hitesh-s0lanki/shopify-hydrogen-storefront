@@ -5,3 +5,4 @@ export async function loader({request, context}: Route.LoaderArgs) {
     countryCode: context.storefront.i18n.country,
   });
 }
+

@@ -9,6 +9,12 @@ import {
   useOutletContext,
 } from 'react-router';
 import type {Route} from './+types/account.profile';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '~/components/ui/card';
+import {Button} from '~/components/ui/button';
+import {Input} from '~/components/ui/input';
+import {Label} from '~/components/ui/label';
+import {Alert, AlertDescription} from '~/components/ui/alert';
+import {AlertCircle, CheckCircle2} from 'lucide-react';
 
 export type ActionResponse = {
   error: string | null;
@@ -84,50 +90,70 @@ export default function AccountProfile() {
   const {state} = useNavigation();
   const action = useActionData<ActionResponse>();
   const customer = action?.customer ?? account?.customer;
+  const isSubmitting = state !== 'idle';
 
   return (
-    <div className="account-profile">
-      <h2>My profile</h2>
-      <br />
-      <Form method="PUT">
-        <legend>Personal information</legend>
-        <fieldset>
-          <label htmlFor="firstName">First name</label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            autoComplete="given-name"
-            placeholder="First name"
-            aria-label="First name"
-            defaultValue={customer.firstName ?? ''}
-            minLength={2}
-          />
-          <label htmlFor="lastName">Last name</label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            autoComplete="family-name"
-            placeholder="Last name"
-            aria-label="Last name"
-            defaultValue={customer.lastName ?? ''}
-            minLength={2}
-          />
-        </fieldset>
-        {action?.error ? (
-          <p>
-            <mark>
-              <small>{action.error}</small>
-            </mark>
-          </p>
-        ) : (
-          <br />
-        )}
-        <button type="submit" disabled={state !== 'idle'}>
-          {state !== 'idle' ? 'Updating' : 'Update'}
-        </button>
-      </Form>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>My Profile</CardTitle>
+        <CardDescription>
+          Update your personal information and preferences.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form method="PUT" className="space-y-6">
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="firstName">First name</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                placeholder="First name"
+                defaultValue={customer.firstName ?? ''}
+                minLength={2}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                placeholder="Last name"
+                defaultValue={customer.lastName ?? ''}
+                minLength={2}
+                required
+              />
+            </div>
+          </div>
+
+          {action?.error && (
+            <Alert variant="destructive">
+              <AlertCircle className="size-4" />
+              <AlertDescription>{action.error}</AlertDescription>
+            </Alert>
+          )}
+
+          {action?.customer && !action?.error && (
+            <Alert>
+              <CheckCircle2 className="size-4" />
+              <AlertDescription>Profile updated successfully!</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Updating...' : 'Update Profile'}
+            </Button>
+          </div>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
+

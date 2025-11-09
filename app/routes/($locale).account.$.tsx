@@ -7,3 +7,4 @@ export async function loader({context}: Route.LoaderArgs) {
 
   return redirect('/account');
 }
+

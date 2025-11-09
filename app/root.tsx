@@ -12,11 +12,11 @@ import {
 } from 'react-router';
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
+import globalsStyles from '~/styles/globals.css?url';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import resetStyles from '~/styles/reset.css?url';
-import appStyles from '~/styles/app.css?url';
-import tailwindCss from './styles/tailwind.css?url';
-import {PageLayout} from './components/PageLayout';
+import {PageLayout} from './components/pageLayout';
+import {NotFoundPage} from './components/404';
+import {ErrorPage} from './components/ErrorPage';
 
 export type RootLoader = typeof loader;
 
@@ -30,10 +30,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 }) => {
   // revalidate when a mutation is performed e.g add to cart, login...
   if (formMethod && formMethod !== 'GET') return true;
-
   // revalidate when manually revalidating via useRevalidator
   if (currentUrl.toString() === nextUrl.toString()) return true;
-
   // Defaulting to no revalidation for root loader data to improve performance.
   // When using this feature, you risk your UI getting out of sync with your server.
   // Use with caution. If you are uncomfortable with this optimization, update the
@@ -69,10 +67,8 @@ export function links() {
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
-
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
   const {storefront, env} = args.context;
 
   return {
@@ -100,7 +96,6 @@ export async function loader(args: Route.LoaderArgs) {
  */
 async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
-
   const [header] = await Promise.all([
     storefront.query(HEADER_QUERY, {
       cache: storefront.CacheLong(),
@@ -135,6 +130,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
       console.error(error);
       return null;
     });
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
@@ -144,15 +140,12 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="stylesheet" href={tailwindCss}></link>
-        <link rel="stylesheet" href={resetStyles}></link>
-        <link rel="stylesheet" href={appStyles}></link>
+        <link rel="stylesheet" href={globalsStyles} />
         <Meta />
         <Links />
       </head>
@@ -187,25 +180,54 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  let errorMessage = 'Unknown error';
+  const data = useRouteLoaderData<RootLoader>('root');
+  let errorMessage: string | undefined;
   let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error?.data?.message ?? error.data;
+    errorMessage = error?.data?.message ?? (typeof error.data === 'string' ? error.data : undefined);
     errorStatus = error.status;
   } else if (error instanceof Error) {
     errorMessage = error.message;
   }
 
+  // For 404 errors, show the custom NotFoundPage
+  if (errorStatus === 404) {
+    if (data) {
+      return (
+        <Analytics.Provider
+          cart={data.cart}
+          shop={data.shop}
+          consent={data.consent}
+        >
+          <PageLayout {...data}>
+            <NotFoundPage />
+          </PageLayout>
+        </Analytics.Provider>
+      );
+    }
+    return <NotFoundPage />;
+  }
+
+  // For other errors, show error page with PageLayout
+  if (data) {
+    return (
+      <Analytics.Provider
+        cart={data.cart}
+        shop={data.shop}
+        consent={data.consent}
+      >
+        <PageLayout {...data}>
+          <ErrorPage status={errorStatus} message={errorMessage} error={error} />
+        </PageLayout>
+      </Analytics.Provider>
+    );
+  }
+
+  // Fallback if no root data is available
   return (
-    <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <ErrorPage status={errorStatus} message={errorMessage} error={error} />
     </div>
   );
 }

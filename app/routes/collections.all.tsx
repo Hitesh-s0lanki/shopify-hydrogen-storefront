@@ -1,14 +1,11 @@
-import type {Route} from './+types/collections.all';
-import {
-  useLoaderData,
-} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {useLoaderData, Link} from 'react-router';
+import type {Route} from './+types/collections._index';
+import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
-import {ProductItem} from '~/components/ProductItem';
-import type {CollectionItemFragment} from 'storefrontapi.generated';
+import {COLLECTIONS_QUERY} from '~/actions/collections/queries';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Products`}];
+  return [{title: 'Collections | Hydrogen'}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -26,18 +23,18 @@ export async function loader(args: Route.LoaderArgs) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
 async function loadCriticalData({context, request}: Route.LoaderArgs) {
-  const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
-    pageBy: 8,
+    pageBy: 4,
   });
 
-  const [{products}] = await Promise.all([
-    storefront.query(CATALOG_QUERY, {
-      variables: {...paginationVariables},
+  const [{collections}] = await Promise.all([
+    context.storefront.query(COLLECTIONS_QUERY, {
+      variables: paginationVariables,
     }),
     // Add other queries here, so that they are loaded in parallel
   ]);
-  return {products};
+
+  return {collections};
 }
 
 /**
@@ -49,76 +46,71 @@ function loadDeferredData({context}: Route.LoaderArgs) {
   return {};
 }
 
-export default function Collection() {
-  const {products} = useLoaderData<typeof loader>();
+type Collection = Awaited<
+  ReturnType<typeof loadCriticalData>
+>['collections']['nodes'][number];
+
+export default function Collections() {
+  const data = useLoaderData<typeof loader>();
+  const {collections} = data;
 
   return (
-    <div className="collection">
-      <h1>Products</h1>
-      <PaginatedResourceSection<CollectionItemFragment>
-        connection={products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
+    <div className="collections min-h-full bg-background py-8 md:py-10">
+      <div className="container mx-auto px-4 md:px-8">
+        <h1 className="mb-8 text-2xl font-semibold text-foreground md:text-3xl">
+          Collections
+        </h1>
+        <PaginatedResourceSection<Collection>
+          connection={collections}
+          resourcesClassName="collections-list flex flex-col gap-4"
+        >
+          {({node: collection, index}) => (
+            <CollectionItem
+              key={collection.id}
+              collection={collection}
+              index={index}
+            />
+          )}
+        </PaginatedResourceSection>
+      </div>
     </div>
   );
 }
 
-const COLLECTION_ITEM_FRAGMENT = `#graphql
-  fragment MoneyCollectionItem on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment CollectionItem on Product {
-    id
-    handle
-    title
-    featuredImage {
-      id
-      altText
-      url
-      width
-      height
-    }
-    priceRange {
-      minVariantPrice {
-        ...MoneyCollectionItem
-      }
-      maxVariantPrice {
-        ...MoneyCollectionItem
-      }
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/product
-const CATALOG_QUERY = `#graphql
-  query Catalog(
-    $country: CountryCode
-    $language: LanguageCode
-    $first: Int
-    $last: Int
-    $startCursor: String
-    $endCursor: String
-  ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
-      nodes {
-        ...CollectionItem
-      }
-      pageInfo {
-        hasPreviousPage
-        hasNextPage
-        startCursor
-        endCursor
-      }
-    }
-  }
-  ${COLLECTION_ITEM_FRAGMENT}
-` as const;
+function CollectionItem({
+  collection,
+  index,
+}: {
+  collection: Collection;
+  index: number;
+}) {
+  return (
+    <Link
+      className="collection-item group relative flex flex-row items-center gap-4 overflow-hidden rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/50"
+      key={collection.id}
+      to={`/collections/${collection.handle}`}
+      prefetch="intent"
+    >
+      {collection?.image && (
+        <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-md bg-muted md:h-16 md:w-28">
+          <Image
+            alt={collection.image.altText || collection.title}
+            aspectRatio="16/9"
+            data={collection.image}
+            loading={index < 3 ? 'eager' : undefined}
+            sizes="112px"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col">
+        <h5 className="text-lg font-normal text-foreground transition-colors group-hover:text-primary">
+          {collection.title}
+        </h5>
+      </div>
+      <div className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1">
+        →
+      </div>
+    </Link>
+  );
+}

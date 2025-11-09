@@ -1,8 +1,12 @@
 import {useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/collections._index';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
-import type {CollectionFragment} from 'storefrontapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {COLLECTIONS_QUERY} from '~/actions/collections/queries';
+
+export const meta: Route.MetaFunction = () => {
+  return [{title: 'Collections | Hydrogen'}];
+};
 
 export async function loader(args: Route.LoaderArgs) {
   // Start fetching non-critical data without blocking time to first byte
@@ -42,24 +46,33 @@ function loadDeferredData({context}: Route.LoaderArgs) {
   return {};
 }
 
+type Collection = Awaited<
+  ReturnType<typeof loadCriticalData>
+>['collections']['nodes'][number];
+
 export default function Collections() {
-  const {collections} = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
+  const {collections} = data;
 
   return (
-    <div className="collections">
-      <h1>Collections</h1>
-      <PaginatedResourceSection<CollectionFragment>
-        connection={collections}
-        resourcesClassName="collections-grid"
-      >
-        {({node: collection, index}) => (
-          <CollectionItem
-            key={collection.id}
-            collection={collection}
-            index={index}
-          />
-        )}
-      </PaginatedResourceSection>
+    <div className="collections min-h-full bg-background py-8 md:py-10">
+      <div className="container mx-auto px-4 md:px-8">
+        <h1 className="mb-8 text-2xl font-semibold text-foreground md:text-3xl">
+          Collections
+        </h1>
+        <PaginatedResourceSection<Collection>
+          connection={collections}
+          resourcesClassName="collections-list flex flex-col gap-4"
+        >
+          {({node: collection, index}) => (
+            <CollectionItem
+              key={collection.id}
+              collection={collection}
+              index={index}
+            />
+          )}
+        </PaginatedResourceSection>
+      </div>
     </div>
   );
 }
@@ -68,66 +81,36 @@ function CollectionItem({
   collection,
   index,
 }: {
-  collection: CollectionFragment;
+  collection: Collection;
   index: number;
 }) {
   return (
     <Link
-      className="collection-item"
+      className="collection-item group relative flex flex-row items-center gap-4 overflow-hidden rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/50"
       key={collection.id}
       to={`/collections/${collection.handle}`}
       prefetch="intent"
     >
       {collection?.image && (
-        <Image
-          alt={collection.image.altText || collection.title}
-          aspectRatio="1/1"
-          data={collection.image}
-          loading={index < 3 ? 'eager' : undefined}
-          sizes="(min-width: 45em) 400px, 100vw"
-        />
+        <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-md bg-muted md:h-16 md:w-28">
+          <Image
+            alt={collection.image.altText || collection.title}
+            aspectRatio="16/9"
+            data={collection.image}
+            loading={index < 3 ? 'eager' : undefined}
+            sizes="112px"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        </div>
       )}
-      <h5>{collection.title}</h5>
+      <div className="flex flex-1 flex-col">
+        <h5 className="text-lg font-normal text-foreground transition-colors group-hover:text-primary">
+          {collection.title}
+        </h5>
+      </div>
+      <div className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1">
+        →
+      </div>
     </Link>
   );
 }
-
-const COLLECTIONS_QUERY = `#graphql
-  fragment Collection on Collection {
-    id
-    title
-    handle
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-  }
-  query StoreCollections(
-    $country: CountryCode
-    $endCursor: String
-    $first: Int
-    $language: LanguageCode
-    $last: Int
-    $startCursor: String
-  ) @inContext(country: $country, language: $language) {
-    collections(
-      first: $first,
-      last: $last,
-      before: $startCursor,
-      after: $endCursor
-    ) {
-      nodes {
-        ...Collection
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-        startCursor
-        endCursor
-      }
-    }
-  }
-` as const;

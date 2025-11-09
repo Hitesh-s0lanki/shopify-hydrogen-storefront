@@ -23,6 +23,20 @@ import type {
   OrderItemFragment,
 } from 'customer-accountapi.generated';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '~/components/ui/card';
+import {Button} from '~/components/ui/button';
+import {Input} from '~/components/ui/input';
+import {Label} from '~/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui/table';
+import {Badge} from '~/components/ui/badge';
+import {Search, ShoppingBag, ArrowRight} from 'lucide-react';
 
 type OrdersLoaderData = {
   customer: CustomerOrdersFragment;
@@ -35,6 +49,10 @@ export const meta: Route.MetaFunction = () => {
 
 export async function loader({request, context}: Route.LoaderArgs) {
   const {customerAccount} = context;
+  
+  // Handle authentication status - redirects to login if not authenticated
+  context.customerAccount.handleAuthStatus();
+  
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 20,
   });
@@ -63,7 +81,14 @@ export default function Orders() {
   const {orders} = customer;
 
   return (
-    <div className="orders">
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Orders</h1>
+        <p className="text-muted-foreground mt-2">
+          View and track your order history
+        </p>
+      </div>
+
       <OrderSearchForm currentFilters={filters} />
       <OrdersTable orders={orders} filters={filters} />
     </div>
@@ -80,11 +105,33 @@ function OrdersTable({
   const hasFilters = !!(filters.name || filters.confirmationNumber);
 
   return (
-    <div className="acccount-orders" aria-live="polite">
+    <div aria-live="polite">
       {orders?.nodes.length ? (
-        <PaginatedResourceSection connection={orders}>
-          {({node: order}) => <OrderItem key={order.id} order={order} />}
-        </PaginatedResourceSection>
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Confirmation</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <PaginatedResourceSection connection={orders}>
+                    {({node: order}) => (
+                      <OrderRow key={order.id} order={order} />
+                    )}
+                  </PaginatedResourceSection>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <EmptyOrders hasFilters={hasFilters} />
       )}
@@ -94,25 +141,30 @@ function OrdersTable({
 
 function EmptyOrders({hasFilters = false}: {hasFilters?: boolean}) {
   return (
-    <div>
-      {hasFilters ? (
-        <>
-          <p>No orders found matching your search.</p>
-          <br />
-          <p>
-            <Link to="/account/orders">Clear filters →</Link>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="text-center py-12">
+          <ShoppingBag className="size-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {hasFilters ? 'No orders found' : "You haven't placed any orders yet"}
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            {hasFilters
+              ? 'Try adjusting your search filters.'
+              : 'Start shopping to see your orders here.'}
           </p>
-        </>
-      ) : (
-        <>
-          <p>You haven&apos;t placed any orders yet.</p>
-          <br />
-          <p>
-            <Link to="/collections">Start Shopping →</Link>
-          </p>
-        </>
-      )}
-    </div>
+          {hasFilters ? (
+            <Button asChild variant="outline">
+              <Link to="/account/orders">Clear filters</Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to="/collections">Start Shopping</Link>
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -149,74 +201,133 @@ function OrderSearchForm({
   const hasFilters = currentFilters.name || currentFilters.confirmationNumber;
 
   return (
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-      className="order-search-form"
-      aria-label="Search orders"
-    >
-      <fieldset className="order-search-fieldset">
-        <legend className="order-search-legend">Filter Orders</legend>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Search className="size-5" />
+          Filter Orders
+        </CardTitle>
+        <CardDescription>
+          Search for orders by order number or confirmation number
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          aria-label="Search orders"
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="order-number">Order #</Label>
+              <Input
+                id="order-number"
+                type="search"
+                name={ORDER_FILTER_FIELDS.NAME}
+                placeholder="Order #"
+                aria-label="Order number"
+                defaultValue={currentFilters.name || ''}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirmation-number">Confirmation #</Label>
+              <Input
+                id="confirmation-number"
+                type="search"
+                name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
+                placeholder="Confirmation #"
+                aria-label="Confirmation number"
+                defaultValue={currentFilters.confirmationNumber || ''}
+              />
+            </div>
+          </div>
 
-        <div className="order-search-inputs">
-          <input
-            type="search"
-            name={ORDER_FILTER_FIELDS.NAME}
-            placeholder="Order #"
-            aria-label="Order number"
-            defaultValue={currentFilters.name || ''}
-            className="order-search-input"
-          />
-          <input
-            type="search"
-            name={ORDER_FILTER_FIELDS.CONFIRMATION_NUMBER}
-            placeholder="Confirmation #"
-            aria-label="Confirmation number"
-            defaultValue={currentFilters.confirmationNumber || ''}
-            className="order-search-input"
-          />
-        </div>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={isSearching}>
+              {isSearching ? 'Searching...' : 'Search'}
+            </Button>
+            {hasFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSearching}
+                onClick={() => {
+                  setSearchParams(new URLSearchParams());
+                  formRef.current?.reset();
+                }}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
-        <div className="order-search-buttons">
-          <button type="submit" disabled={isSearching}>
-            {isSearching ? 'Searching' : 'Search'}
-          </button>
-          {hasFilters && (
-            <button
-              type="button"
-              disabled={isSearching}
-              onClick={() => {
-                setSearchParams(new URLSearchParams());
-                formRef.current?.reset();
-              }}
-            >
-              Clear
-            </button>
+function OrderRow({order}: {order: OrderItemFragment}) {
+  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
+  
+  const getStatusBadgeVariant = (status?: string) => {
+    if (!status) return 'secondary';
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus.includes('fulfilled') || lowerStatus.includes('complete')) {
+      return 'default';
+    }
+    if (lowerStatus.includes('pending')) {
+      return 'secondary';
+    }
+    return 'outline';
+  };
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        <Link
+          to={`/account/orders/${btoa(order.id)}`}
+          className="hover:underline text-primary"
+        >
+          #{order.number}
+        </Link>
+      </TableCell>
+      <TableCell>
+        {new Date(order.processedAt).toLocaleDateString()}
+      </TableCell>
+      <TableCell>
+        {order.confirmationNumber ? (
+          <span className="text-muted-foreground">
+            {order.confirmationNumber}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <Badge variant={getStatusBadgeVariant(order.financialStatus)}>
+            {order.financialStatus}
+          </Badge>
+          {fulfillmentStatus && (
+            <Badge variant={getStatusBadgeVariant(fulfillmentStatus)}>
+              {fulfillmentStatus}
+            </Badge>
           )}
         </div>
-      </fieldset>
-    </form>
+      </TableCell>
+      <TableCell className="text-right font-medium">
+        <Money data={order.totalPrice} />
+      </TableCell>
+      <TableCell className="text-right">
+        <Button asChild variant="ghost" size="sm">
+          <Link to={`/account/orders/${btoa(order.id)}`}>
+            View
+            <ArrowRight className="size-4 ml-2" />
+          </Link>
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }
 
-function OrderItem({order}: {order: OrderItemFragment}) {
-  const fulfillmentStatus = flattenConnection(order.fulfillments)[0]?.status;
-  return (
-    <>
-      <fieldset>
-        <Link to={`/account/orders/${btoa(order.id)}`}>
-          <strong>#{order.number}</strong>
-        </Link>
-        <p>{new Date(order.processedAt).toDateString()}</p>
-        {order.confirmationNumber && (
-          <p>Confirmation: {order.confirmationNumber}</p>
-        )}
-        <p>{order.financialStatus}</p>
-        {fulfillmentStatus && <p>{fulfillmentStatus}</p>}
-        <Money data={order.totalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
-      </fieldset>
-      <br />
-    </>
-  );
-}
