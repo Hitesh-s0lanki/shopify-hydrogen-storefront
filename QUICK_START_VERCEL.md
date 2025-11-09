@@ -99,8 +99,13 @@ Vercel automatically uses `build:vercel` (configured in `vercel.json`)
 - **Check**: Is `@react-router/node` in `package.json`?
 - **Check**: Did the build complete successfully locally with `npm run build:vercel`?
 
+### Function Crashes (500 Error)
+- **Check**: View function logs in Vercel Dashboard → Functions tab
+- **Check**: Verify `dist/` and `app/` folders are included in deployment
+- **Fix**: See [VERCEL_TROUBLESHOOTING.md](./VERCEL_TROUBLESHOOTING.md) for detailed steps
+
 ### Site Shows 404
-- **Check**: Is the rewrite rule in `vercel.json` correct?
+- **Check**: Is the route configuration in `vercel.json` correct?
 - **Fix**: Redeploy to apply configuration changes
 
 ### API Errors

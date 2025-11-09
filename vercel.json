@@ -1,16 +1,20 @@
 {
   "buildCommand": "npm run build:vercel",
-  "framework": null,
   "installCommand": "npm install",
+  "outputDirectory": "dist/client",
   "functions": {
-    "api/index.js": {
-      "maxDuration": 60
+    "api/**/*.js": {
+      "includeFiles": "{dist/**,app/**}"
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
     }
   ]
 }

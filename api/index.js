@@ -1,13 +1,20 @@
-import {createRequestHandler, storefrontRedirect} from '@shopify/hydrogen';
-import {createHydrogenRouterContext} from '../app/lib/context.js';
-import * as build from '../dist/server/index.js';
-
 /**
- * Vercel serverless function handler
- * This function handles all incoming requests for the Hydrogen storefront
+ * Vercel serverless function handler for Hydrogen storefront
+ * 
+ * This is a minimal wrapper that loads the server build and creates
+ * the Hydrogen context for each request.
  */
+
 export default async function handler(req, res) {
   try {
+    // Dynamically import dependencies
+    const {createRequestHandler, storefrontRedirect} = await import('@shopify/hydrogen');
+    const {createHydrogenRouterContext} = await import('../app/lib/context.js');
+    
+    // Import the server build
+    const serverBuildPath = new URL('../dist/server/index.js', import.meta.url);
+    const build = await import(serverBuildPath.href);
+
     // Convert Node.js IncomingMessage to Fetch API Request
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
@@ -97,7 +104,8 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Server error:', error);
     console.error('Stack trace:', error.stack);
-    res.status(500).send(`An unexpected error occurred: ${error.message}`);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    res.status(500).send(`An unexpected error occurred: ${error.message}\n\nCheck Vercel function logs for details.`);
   }
 }
 
