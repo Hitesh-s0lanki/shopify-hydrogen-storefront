@@ -1,6 +1,6 @@
 # 🛍️ Modern Shopify Hydrogen Storefront
 
-![Shopify Hydrogen Storefront](/images/banner)
+![Shopify Hydrogen Storefront](/images/banner.png)
 
 <div align="center">
 
