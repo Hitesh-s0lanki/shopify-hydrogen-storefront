@@ -3,6 +3,5 @@ node_modules
 .env
 .git
 .cache
-dist/client
 *.log
 
