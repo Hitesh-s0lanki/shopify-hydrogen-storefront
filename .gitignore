@@ -5,9 +5,7 @@ node_modules
 /public/build
 /.mf
 .env
-.env.local
 .shopify
 .react-router
-.vercel
 
 # references

@@ -34,25 +34,6 @@ npm create @shopify/hydrogen@latest
 npm run build
 ```
 
-## Deployment
-
-### Deploying to Vercel
-
-This project is configured for deployment to Vercel. See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed instructions.
-
-Quick steps:
-1. Install dependencies: `npm install`
-2. Set environment variables in Vercel dashboard
-3. Deploy: `vercel --prod`
-
-### Deploying to Shopify Oxygen
-
-To deploy to Shopify's hosting platform, use:
-
-```bash
-npm run deploy
-```
-
 ## Local development
 
 ```bash
