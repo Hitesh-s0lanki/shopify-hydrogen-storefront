@@ -4,8 +4,7 @@
   "installCommand": "npm install",
   "functions": {
     "api/index.js": {
-      "runtime": "nodejs22.x",
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "rewrites": [
@@ -15,4 +14,3 @@
     }
   ]
 }
-
