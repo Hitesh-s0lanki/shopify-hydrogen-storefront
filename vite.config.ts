@@ -26,16 +26,12 @@ function suppressSourcemapWarnings(): Plugin {
   };
 }
 
-// Check if building for Node.js (Vercel) or Oxygen
-const isNodeBuild = process.env.HYDROGEN_TARGET === 'node';
-
 export default defineConfig({
   plugins: [
     suppressSourcemapWarnings(),
     tailwindcss(),
     hydrogen(),
-    // Only include oxygen plugin for Oxygen builds
-    ...(isNodeBuild ? [] : [oxygen()]),
+    oxygen(),
     reactRouter(),
     tsconfigPaths(),
   ],

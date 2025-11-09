@@ -1,17 +1,14 @@
 /**
  * Vercel serverless function handler for Hydrogen storefront
  * 
- * This is a minimal wrapper that loads the server build and creates
- * the Hydrogen context for each request.
+ * This is a self-contained handler that creates the Hydrogen context
+ * and handles requests using the React Router build.
  */
 
 export default async function handler(req, res) {
   try {
-    // Dynamically import dependencies
-    const {createRequestHandler, storefrontRedirect} = await import('@shopify/hydrogen');
-    const {createHydrogenRouterContext} = await import('../app/lib/context.js');
-    
-    // Import the server build
+    // Dynamic imports
+    const {createRequestHandler, storefrontRedirect, createHydrogenContext, createCookieSessionStorage} = await import('@shopify/hydrogen');
     const serverBuildPath = new URL('../dist/server/index.js', import.meta.url);
     const build = await import(serverBuildPath.href);
 
@@ -45,18 +42,28 @@ export default async function handler(req, res) {
       PUBLIC_SITE_URL: process.env.PUBLIC_SITE_URL,
     };
 
-    // Create a mock ExecutionContext for Hydrogen
+    // Create a mock ExecutionContext
     const executionContext = {
       waitUntil: (promise) => promise,
       passThroughOnException: () => {},
     };
 
-    // Create Hydrogen context
-    const hydrogenContext = await createHydrogenRouterContext(
+    // Create Hydrogen context (inline to avoid TypeScript path alias issues)
+    const hydrogenContext = await createHydrogenContext({
       request,
       env,
-      executionContext,
-    );
+      waitUntil: executionContext.waitUntil.bind(executionContext),
+      session: createCookieSessionStorage({
+        cookie: {
+          name: 'session',
+          httpOnly: true,
+          path: '/',
+          sameSite: 'lax',
+          secrets: [env.SESSION_SECRET],
+        },
+      }),
+      // Additional context (empty for now, but can be extended)
+    });
 
     // Create request handler with the built application
     const handleRequest = createRequestHandler({
@@ -104,7 +111,11 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Server error:', error);
     console.error('Stack trace:', error.stack);
-    console.error('Error details:', JSON.stringify(error, null, 2));
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+    });
     res.status(500).send(`An unexpected error occurred: ${error.message}\n\nCheck Vercel function logs for details.`);
   }
 }
