@@ -1,4 +1,3 @@
-import {Analytics, getShopAnalytics, useNonce} from '@shopify/hydrogen';
 import {
   Outlet,
   useRouteError,
@@ -10,15 +9,16 @@ import {
   ScrollRestoration,
   useRouteLoaderData,
 } from 'react-router';
+// Analytics from @shopify/hydrogen-react will be added when needed
+// For now, we'll use a simplified approach
 import type {Route} from './+types/root';
 import favicon from '~/assets/favicon.svg';
 import globalsStyles from '~/styles/globals.css?url';
-import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
-import {PageLayout} from './components/pageLayout';
 import {NotFoundPage} from './components/404';
 import {ErrorPage} from './components/ErrorPage';
-
-export type RootLoader = typeof loader;
+import {createShopifyStorefrontClient, getShopifyEnv} from '~/lib/shopifyClient';
+import {HEADER_QUERY, FOOTER_QUERY} from '~/lib/fragments';
+import {PageLayout} from './components/pageLayout';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -65,81 +65,62 @@ export function links() {
 }
 
 export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-  const {storefront, env} = args.context;
+  try {
+    const env = getShopifyEnv();
+    const storefront = createShopifyStorefrontClient(env);
+    const i18n = storefront.getI18n(args.request);
 
-  return {
-    ...deferredData,
-    ...criticalData,
-    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
-    shop: getShopAnalytics({
-      storefront,
-      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-    }),
-    consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: false,
-      // localize the privacy banner
-      country: args.context.storefront.i18n.country,
-      language: args.context.storefront.i18n.language,
-    },
-  };
-}
+    // Fetch header and footer in parallel
+    const [headerResult, footerResult] = await Promise.all([
+      storefront.query(HEADER_QUERY, {
+        variables: {
+          headerMenuHandle: 'main-menu',
+          language: i18n.language,
+          country: i18n.country,
+        },
+      }).catch((error) => {
+        console.error('Header query error:', error);
+        return null;
+      }),
+      storefront.query(FOOTER_QUERY, {
+        variables: {
+          footerMenuHandle: 'footer',
+          language: i18n.language,
+          country: i18n.country,
+        },
+      }).catch((error) => {
+        console.error('Footer query error:', error);
+        return null;
+      }),
+    ]);
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context}: Route.LoaderArgs) {
-  const {storefront} = context;
-  const [header] = await Promise.all([
-    storefront.query(HEADER_QUERY, {
-      cache: storefront.CacheLong(),
-      variables: {
-        headerMenuHandle: 'main-menu', // Adjust to your header menu handle
+    return {
+      header: headerResult,
+      footer: Promise.resolve(footerResult),
+      shop: {
+        name: headerResult?.shop?.name || 'Store',
+        id: headerResult?.shop?.id || '',
       },
-    }),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
-
-  return {header};
-}
-
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
-  const {storefront, customerAccount, cart} = context;
-
-  // defer the footer query (below the fold)
-  const footer = storefront
-    .query(FOOTER_QUERY, {
-      cache: storefront.CacheLong(),
-      variables: {
-        footerMenuHandle: 'footer', // Adjust to your footer menu handle
-      },
-    })
-    .catch((error: Error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
-
-  return {
-    cart: cart.get(),
-    isLoggedIn: customerAccount.isLoggedIn(),
-    footer,
-  };
+      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+      // Cart will be handled separately in Phase 2 if needed
+      cart: Promise.resolve(null),
+      isLoggedIn: Promise.resolve(false),
+    };
+  } catch (error) {
+    console.error('Root loader error:', error);
+    // Return minimal data if Shopify queries fail
+    return {
+      header: null,
+      footer: Promise.resolve(null),
+      shop: { name: 'Store', id: '' },
+      publicStoreDomain: process.env.PUBLIC_STORE_DOMAIN || '',
+      cart: Promise.resolve(null),
+      isLoggedIn: Promise.resolve(false),
+    };
+  }
 }
 
 export function Layout({children}: {children?: React.ReactNode}) {
-  const nonce = useNonce();
   return (
     <html lang="en">
       <head>
@@ -151,36 +132,31 @@ export function Layout({children}: {children?: React.ReactNode}) {
       </head>
       <body>
         {children}
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
+        <ScrollRestoration />
+        <Scripts />
       </body>
     </html>
   );
 }
 
 export default function App() {
-  const data = useRouteLoaderData<RootLoader>('root');
+  const data = useRouteLoaderData<typeof loader>('root');
 
   if (!data) {
     return <Outlet />;
   }
 
+  // Analytics.Provider will be added in a future update
+  // For now, render PageLayout directly
   return (
-    <Analytics.Provider
-      cart={data.cart}
-      shop={data.shop}
-      consent={data.consent}
-    >
-      <PageLayout {...data}>
-        <Outlet />
-      </PageLayout>
-    </Analytics.Provider>
+    <PageLayout {...data}>
+      <Outlet />
+    </PageLayout>
   );
 }
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  const data = useRouteLoaderData<RootLoader>('root');
   let errorMessage: string | undefined;
   let errorStatus = 500;
 
@@ -193,38 +169,10 @@ export function ErrorBoundary() {
 
   // For 404 errors, show the custom NotFoundPage
   if (errorStatus === 404) {
-    if (data) {
-      return (
-        <Analytics.Provider
-          cart={data.cart}
-          shop={data.shop}
-          consent={data.consent}
-        >
-          <PageLayout {...data}>
-            <NotFoundPage />
-          </PageLayout>
-        </Analytics.Provider>
-      );
-    }
     return <NotFoundPage />;
   }
 
-  // For other errors, show error page with PageLayout
-  if (data) {
-    return (
-      <Analytics.Provider
-        cart={data.cart}
-        shop={data.shop}
-        consent={data.consent}
-      >
-        <PageLayout {...data}>
-          <ErrorPage status={errorStatus} message={errorMessage} error={error} />
-        </PageLayout>
-      </Analytics.Provider>
-    );
-  }
-
-  // Fallback if no root data is available
+  // For other errors, show error page
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <ErrorPage status={errorStatus} message={errorMessage} error={error} />

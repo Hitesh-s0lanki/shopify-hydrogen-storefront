@@ -6,51 +6,51 @@ import {
 } from '~/actions/home/queries';
 import {FeaturedCollection} from '~/components/home/FeaturedCollection';
 import {RecommendedProducts} from '~/components/home/RecommendedProducts';
+import {createShopifyStorefrontClient, getShopifyEnv} from '~/lib/shopifyClient';
 
 export const meta: Route.MetaFunction = () => {
   return [{title: 'Hydrogen | Home'}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
-  // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
-  return {...deferredData, ...criticalData};
-}
+  try {
+    const env = getShopifyEnv();
+    const storefront = createShopifyStorefrontClient(env);
+    const i18n = storefront.getI18n(args.request);
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context}: Route.LoaderArgs) {
-  const [{collections}] = await Promise.all([
-    context.storefront.query(FEATURED_COLLECTION_QUERY),
-    // Add other queries here, so that they are loaded in parallel
-  ]);
+    // Fetch featured collection and recommended products in parallel
+    const [collectionsResult, productsResult] = await Promise.all([
+      storefront.query(FEATURED_COLLECTION_QUERY, {
+        variables: {
+          language: i18n.language,
+          country: i18n.country,
+        },
+      }).catch((error) => {
+        console.error('Featured collection query error:', error);
+        return null;
+      }),
+      storefront.query(RECOMMENDED_PRODUCTS_QUERY, {
+        variables: {
+          language: i18n.language,
+          country: i18n.country,
+        },
+      }).catch((error) => {
+        console.error('Recommended products query error:', error);
+        return null;
+      }),
+    ]);
 
-  return {
-    featuredCollection: collections.nodes[0],
-  };
-}
-
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
-  const recommendedProducts = context.storefront
-    .query(RECOMMENDED_PRODUCTS_QUERY)
-    .catch((error: Error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
-
-  return {
-    recommendedProducts,
-  };
+    return {
+      featuredCollection: collectionsResult?.collections?.nodes?.[0] || null,
+      recommendedProducts: productsResult?.products?.nodes || [],
+    };
+  } catch (error) {
+    console.error('Homepage loader error:', error);
+    return {
+      featuredCollection: null,
+      recommendedProducts: [],
+    };
+  }
 }
 
 export default function Homepage() {
@@ -59,7 +59,9 @@ export default function Homepage() {
   return (
     <div className="home min-h-full bg-background py-8 md:py-10 space-y-10">
       {/* Hero/Featured Collection Section */}
-      <FeaturedCollection collection={data.featuredCollection} />
+      {data.featuredCollection && (
+        <FeaturedCollection collection={data.featuredCollection} />
+      )}
 
       {/* Recommended Products Section */}
       <RecommendedProducts products={data.recommendedProducts} />

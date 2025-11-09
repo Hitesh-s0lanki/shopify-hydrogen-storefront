@@ -1,7 +1,9 @@
-import type {LoaderFunctionArgs} from '@shopify/remix-oxygen';
+import type {Route} from './+types/($locale)';
+import {getLocaleFromRequest} from '~/lib/i18n';
 
-export async function loader({params, context}: LoaderFunctionArgs) {
-  const {language, country} = context.storefront.i18n;
+export async function loader({params, request}: Route.LoaderArgs) {
+  const i18n = getLocaleFromRequest(request);
+  const {language, country} = i18n;
 
   if (
     params.locale &&

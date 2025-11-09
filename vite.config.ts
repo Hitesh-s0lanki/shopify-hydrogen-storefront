@@ -1,6 +1,4 @@
 import {defineConfig, type Plugin} from 'vite';
-import {hydrogen} from '@shopify/hydrogen/vite';
-import {oxygen} from '@shopify/mini-oxygen/vite';
 import {reactRouter} from '@react-router/dev/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
@@ -30,8 +28,6 @@ export default defineConfig({
   plugins: [
     suppressSourcemapWarnings(),
     tailwindcss(),
-    hydrogen(),
-    oxygen(),
     reactRouter(),
     tsconfigPaths(),
   ],
@@ -67,16 +63,24 @@ export default defineConfig({
         'set-cookie-parser',
         'cookie',
         'react-router',
+        'react-dom',
+        'react-dom/server',
         'react-markdown',
         'style-to-js',
         'hast-util-to-jsx-runtime',
       ],
     },
     /**
-     * Bundle these dependencies for SSR (Cloudflare Workers ESM environment)
+     * Bundle these dependencies for SSR (Node.js ESM environment)
      * instead of treating them as external modules
      */
-    noExternal: ['react-markdown', 'style-to-js', 'hast-util-to-jsx-runtime'],
+    noExternal: [
+      'react-markdown',
+      'style-to-js',
+      'hast-util-to-jsx-runtime',
+      'react-dom',
+      'react-dom/server',
+    ],
   },
   server: {
     allowedHosts: ['.tryhydrogen.dev'],

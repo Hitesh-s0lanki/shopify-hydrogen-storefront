@@ -1,22 +1,44 @@
 import type {Route} from './+types/[robots.txt]';
 import {parseGid} from '@shopify/hydrogen';
+import {createShopifyStorefrontClient, getShopifyEnv} from '~/lib/shopifyClient';
+import {getLocaleFromRequest} from '~/lib/i18n';
 
-export async function loader({request, context}: Route.LoaderArgs) {
+export async function loader({request}: Route.LoaderArgs) {
   const url = new URL(request.url);
 
-  const {shop} = await context.storefront.query(ROBOTS_QUERY);
+  try {
+    const env = getShopifyEnv();
+    const storefront = createShopifyStorefrontClient(env);
+    const i18n = getLocaleFromRequest(request);
 
-  const shopId = parseGid(shop.id).id;
-  const body = robotsTxtData({url: url.origin, shopId});
+    const result = await storefront.query(ROBOTS_QUERY, {
+      variables: {
+        language: i18n.language,
+        country: i18n.country,
+      },
+    });
 
-  return new Response(body, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain',
+    const shopId = result?.shop?.id ? parseGid(result.shop.id).id : undefined;
+    const body = robotsTxtData({url: url.origin, shopId});
 
-      'Cache-Control': `max-age=${60 * 60 * 24}`,
-    },
-  });
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'Cache-Control': `max-age=${60 * 60 * 24}`,
+      },
+    });
+  } catch (error) {
+    // If query fails, return robots.txt without shop ID
+    const body = robotsTxtData({url: url.origin});
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'Cache-Control': `max-age=${60 * 60 * 24}`,
+      },
+    });
+  }
 }
 
 function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {

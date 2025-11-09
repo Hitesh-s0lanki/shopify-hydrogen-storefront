@@ -5,6 +5,9 @@ import {createHydrogenRouterContext} from '~/lib/context';
 
 /**
  * Export a fetch handler in module format.
+ * 
+ * This file is renamed to server.oxygen.ts to bypass it during React Router + Vercel builds.
+ * The Vercel preset will generate its own server entry point.
  */
 export default {
   async fetch(
@@ -59,3 +62,4 @@ export default {
     }
   },
 };
+
