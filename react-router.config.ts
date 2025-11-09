@@ -4,10 +4,20 @@ import {hydrogenPreset} from '@shopify/hydrogen/react-router-preset';
 /**
  * React Router 7.9.x Configuration for Hydrogen
  *
- * This configuration uses the official Hydrogen preset to provide optimal
- * React Router settings for Shopify Oxygen deployment. The preset enables
- * validated performance optimizations while ensuring compatibility.
+ * This configuration supports both Shopify Oxygen and Node.js (Vercel)
+ * deployment targets based on the HYDROGEN_TARGET environment variable.
  */
-export default {
-  presets: [hydrogenPreset()],
-} satisfies Config;
+
+// Check if building for Node.js (Vercel) or Oxygen
+const isNodeBuild = process.env.HYDROGEN_TARGET === 'node';
+
+const config: Config = {
+  buildDirectory: './dist',
+};
+
+// Only use Hydrogen preset for Oxygen builds
+if (!isNodeBuild) {
+  config.presets = [hydrogenPreset()];
+}
+
+export default config;

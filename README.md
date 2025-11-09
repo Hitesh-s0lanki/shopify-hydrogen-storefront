@@ -30,9 +30,19 @@ npm create @shopify/hydrogen@latest
 
 ## Building for production
 
+### For Oxygen (Shopify's platform)
+
 ```bash
 npm run build
 ```
+
+### For Vercel or other Node.js platforms
+
+```bash
+npm run build:vercel
+```
+
+See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed deployment instructions.
 
 ## Local development
 
