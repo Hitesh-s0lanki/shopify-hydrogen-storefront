@@ -1,0 +1,17 @@
+{
+  "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/client",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "edge"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/index.ts"
+    }
+  ]
+}

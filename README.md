@@ -34,6 +34,23 @@ npm create @shopify/hydrogen@latest
 npm run build
 ```
 
+## Deploying to Vercel
+
+The repository is preconfigured for Vercel's Edge Runtime using the instructions from Shopify's Hydrogen self-hosting guide. To
+deploy:
+
+1. Create a new Vercel project and connect it to this repository.
+2. In **Project Settings → Environment Variables**, add the required Hydrogen secrets:
+   - `SESSION_SECRET`
+   - `PUBLIC_STORE_DOMAIN`
+   - `PUBLIC_STOREFRONT_API_TOKEN`
+   - `PRIVATE_STOREFRONT_API_TOKEN`
+   - Optional keys such as `OPENAI_API_KEY` and `PUBLIC_SITE_URL`
+3. Vercel automatically runs `npm install` and `npm run build`; the generated static assets in `dist/client` are uploaded and all
+   requests are routed through the Edge function defined in `api/index.ts`.
+4. Trigger a deployment with `vercel --prod` or by pushing to your default branch. Subsequent requests are served from the Edge
+   runtime while still supporting server-side rendering and session cookies.
+
 ## Local development
 
 ```bash
