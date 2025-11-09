@@ -31,7 +31,7 @@ export default defineConfig({
     suppressSourcemapWarnings(),
     tailwindcss(),
     hydrogen(),
-    oxygen(),
+    // oxygen(), // Needed for dev server, doesn't affect Vercel deployment
     reactRouter(),
     tsconfigPaths(),
   ],
@@ -67,13 +67,14 @@ export default defineConfig({
         'set-cookie-parser',
         'cookie',
         'react-router',
+        'react-dom/server',
         'react-markdown',
         'style-to-js',
         'hast-util-to-jsx-runtime',
       ],
     },
     /**
-     * Bundle these dependencies for SSR (Cloudflare Workers ESM environment)
+     * Bundle these dependencies for SSR (Cloudflare Workers for dev, Node.js for Vercel prod)
      * instead of treating them as external modules
      */
     noExternal: ['react-markdown', 'style-to-js', 'hast-util-to-jsx-runtime'],
