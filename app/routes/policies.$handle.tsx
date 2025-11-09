@@ -14,13 +14,36 @@ import {Alert, AlertDescription, AlertTitle} from '~/components/ui/alert';
 import {Info} from 'lucide-react';
 
 const POLICY_QUERY = `#graphql
-  query Policy($handle: String!) {
-    shopPolicies(handle: $handle) {
-      id
-      title
-      body
-      handle
-      type
+  query Policy {
+    shop {
+      privacyPolicy {
+        body
+        handle
+        id
+        title
+        url
+      }
+      refundPolicy {
+        body
+        handle
+        id
+        title
+        url
+      }
+      termsOfService {
+        body
+        handle
+        id
+        title
+        url
+      }
+      shippingPolicy {
+        body
+        handle
+        id
+        title
+        url
+      }
     }
   }
 ` as const;
@@ -38,17 +61,52 @@ export async function loader(args: Route.LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  const {shopPolicies} = await storefront.query(POLICY_QUERY, {
-    variables: {handle},
-  });
+  const {shop} = await storefront.query(POLICY_QUERY);
 
-  const policy = shopPolicies?.[0];
+  // Map handle to policy field name
+  const handleToPolicyMap: Record<string, string> = {
+    'privacy-policy': 'privacyPolicy',
+    'refund-policy': 'refundPolicy',
+    'terms-of-service': 'termsOfService',
+    'shipping-policy': 'shippingPolicy',
+  };
+
+  const policyField = handleToPolicyMap[handle];
+  if (!policyField) {
+    throw new Response(null, {status: 404});
+  }
+
+  // Get the policy from the shop object
+  const policy =
+    (shop as any)[policyField] as
+      | {
+          body: string;
+          handle: string;
+          id: string;
+          title: string;
+          url: string;
+        }
+      | null
+      | undefined;
 
   if (!policy) {
     throw new Response(null, {status: 404});
   }
 
-  return {policy};
+  // Map policy type based on field name
+  const fieldToTypeMap: Record<string, string> = {
+    privacyPolicy: 'PRIVACY_POLICY',
+    refundPolicy: 'REFUND_POLICY',
+    termsOfService: 'TERMS_OF_SERVICE',
+    shippingPolicy: 'SHIPPING_POLICY',
+  };
+
+  return {
+    policy: {
+      ...policy,
+      type: fieldToTypeMap[policyField] || 'POLICY',
+    },
+  };
 }
 
 function getPolicyIcon(type: string) {
@@ -56,7 +114,6 @@ function getPolicyIcon(type: string) {
     PRIVACY_POLICY: Lock,
     REFUND_POLICY: Scale,
     TERMS_OF_SERVICE: FileText,
-    TERMS_OF_SALE: FileText,
     SHIPPING_POLICY: FileText,
   };
   return iconMap[type] || FileText;
@@ -67,7 +124,6 @@ function getPolicyDescription(type: string): string {
     PRIVACY_POLICY: 'Learn how we collect, use, and protect your personal information.',
     REFUND_POLICY: 'Our refund and return policy for purchases.',
     TERMS_OF_SERVICE: 'Review our terms and conditions for using our services.',
-    TERMS_OF_SALE: 'Terms and conditions for purchasing products from our store.',
     SHIPPING_POLICY: 'Information about shipping options, rates, and delivery times.',
   };
   return (
