@@ -1,43 +1,34 @@
 {
-  "include": [
-    "env.d.ts",
-    "app/**/*.ts",
-    "app/**/*.tsx",
-    "app/**/*.d.ts",
-    "*.ts",
-    "*.tsx",
-    "*.d.ts",
-    ".graphqlrc.ts",
-    ".react-router/types/**/*"
-  ],
-  "exclude": ["node_modules", "dist", "build", "packages/**/dist/**/*"],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "Bundler",
-    "resolveJsonModule": true,
-    "module": "ES2022",
-    "target": "ES2022",
-    "strict": true,
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "types": [
-      "@shopify/oxygen-workers-types",
-      "react-router",
-      "@shopify/hydrogen/react-router-types",
-      "vite/client"
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
     ],
     "paths": {
-      "~/*": ["app/*"]
-    },
-    "noEmit": true,
-    "rootDirs": [".", "./.react-router/types"],
-    "incremental": true,
-    "composite": false,
-    "verbatimModuleSyntax": true
-  }
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
 }
