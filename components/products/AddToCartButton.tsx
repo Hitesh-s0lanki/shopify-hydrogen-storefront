@@ -55,8 +55,10 @@ export function AddToCartButton({
 
       const data = await response.json();
 
-      if (data.error) {
-        toast.error(data.error);
+      if (!response.ok || data.error) {
+        const errorMessage = data.error || `Failed to add to cart (${response.status})`;
+        toast.error(errorMessage);
+        console.error("Add to cart error:", errorMessage, data);
         return;
       }
 
@@ -65,12 +67,18 @@ export function AddToCartButton({
         if (onAddToCart) {
           onAddToCart();
         }
-        // Trigger cart update event for cart sheet
+        // Trigger cart update event for cart sheet and header
         window.dispatchEvent(new CustomEvent("cart-updated"));
+        // Refresh the page data if needed
+        router.refresh();
+      } else {
+        toast.error("Unexpected response from server");
+        console.error("Unexpected cart response:", data);
       }
     } catch (error) {
       console.error("Failed to add to cart:", error);
-      toast.error("Failed to add item to cart");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add item to cart";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

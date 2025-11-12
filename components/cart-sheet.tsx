@@ -58,10 +58,14 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
     setIsLoading(true);
     try {
       const response = await fetch("/api/cart");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cart: ${response.status}`);
+      }
       const data = await response.json();
-      setCart(data.cart);
+      setCart(data.cart || null);
     } catch (error) {
       console.error("Failed to fetch cart:", error);
+      setCart(null);
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +90,10 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       });
 
       const data = await response.json();
+      if (!response.ok || data.error) {
+        console.error("Failed to update cart:", data.error || "Unknown error");
+        return;
+      }
       if (data.cart) {
         setCart(data.cart);
       }
@@ -113,6 +121,10 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
       });
 
       const data = await response.json();
+      if (!response.ok || data.error) {
+        console.error("Failed to remove cart line:", data.error || "Unknown error");
+        return;
+      }
       if (data.cart) {
         setCart(data.cart);
       }

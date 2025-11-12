@@ -35,7 +35,33 @@ export async function getCart(): Promise<Cart | null> {
       },
     });
 
-    return response.data.cart;
+    // Check if response exists
+    if (!response) {
+      console.error("No response from Shopify");
+      return null;
+    }
+
+    // Check for GraphQL errors at top level
+    if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+      console.error("GraphQL errors:", response.errors);
+      return null;
+    }
+
+    // Handle different response structures
+    const responseData = response.data || response;
+    
+    if (!responseData) {
+      console.error("No data in response. Full response:", JSON.stringify(response, null, 2));
+      return null;
+    }
+
+    if (!responseData.cart) {
+      // Cart might not exist anymore
+      console.log("Cart not found in response, it may have been deleted");
+      return null;
+    }
+
+    return responseData.cart;
   } catch (error) {
     console.error("Get cart error:", error);
     return null;
@@ -43,9 +69,63 @@ export async function getCart(): Promise<Cart | null> {
 }
 
 export async function createCart(): Promise<Cart> {
-  const response = await shopifyClient.request(CART_CREATE_MUTATION);
+  let response;
+  try {
+    response = await shopifyClient.request(CART_CREATE_MUTATION);
+  } catch (error) {
+    console.error("Shopify API request error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to connect to Shopify API";
+    throw new Error(`Failed to create cart: ${errorMessage}`);
+  }
 
-  const cart = response.data.cartCreate.cart;
+  // Log full response for debugging (only in development)
+  if (process.env.NODE_ENV === "development") {
+    console.log("Shopify cartCreate response:", JSON.stringify(response, null, 2));
+  }
+
+  // Check if response exists
+  if (!response) {
+    console.error("No response from Shopify");
+    throw new Error("No response from Shopify API");
+  }
+
+  // Check for GraphQL errors at top level
+  if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+    const errorMessages = response.errors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    console.error("GraphQL errors:", response.errors);
+    throw new Error(`GraphQL error: ${errorMessages}`);
+  }
+
+  // Handle different response structures
+  let responseData = response.data || response;
+  
+  if (!responseData) {
+    console.error("No data in response. Full response:", JSON.stringify(response, null, 2));
+    throw new Error("Invalid response from Shopify API: No data property");
+  }
+
+  if (!responseData.cartCreate) {
+    console.error("cartCreate not found. Available keys:", Object.keys(responseData || {}));
+    console.error("Full response:", JSON.stringify(response, null, 2));
+    throw new Error(`Failed to create cart: Invalid response structure. Available keys: ${Object.keys(responseData).join(", ")}`);
+  }
+
+  // Check for user errors from Shopify
+  if (responseData.cartCreate.userErrors && responseData.cartCreate.userErrors.length > 0) {
+    const errorMessages = responseData.cartCreate.userErrors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    throw new Error(errorMessages);
+  }
+
+  if (!responseData.cartCreate.cart) {
+    console.error("Cart not found in response:", responseData.cartCreate);
+    throw new Error("Failed to create cart: Cart not returned");
+  }
+
+  const cart = responseData.cartCreate.cart;
   await setCartId(cart.id);
 
   return cart;
@@ -56,6 +136,16 @@ export async function addToCart(
   quantity: number = 1,
   attributes: Array<{ key: string; value: string }> = []
 ): Promise<Cart> {
+  // Validate variantId
+  if (!variantId || typeof variantId !== "string") {
+    throw new Error("Invalid variant ID");
+  }
+
+  // Validate quantity
+  if (quantity < 1) {
+    throw new Error("Quantity must be at least 1");
+  }
+
   let cartId = await getCartId();
   let cart: Cart | null = null;
 
@@ -64,28 +154,100 @@ export async function addToCart(
     cart = await createCart();
     cartId = cart.id;
   } else {
+    // Verify cart still exists
     cart = await getCart();
     if (!cart) {
+      // Cart was deleted or invalid, create a new one
       cart = await createCart();
+      cartId = cart.id;
+    } else {
+      // Use the cart ID from the fetched cart to ensure it's current
       cartId = cart.id;
     }
   }
 
-  // Add item to cart
-  const response = await shopifyClient.request(CART_LINES_ADD_MUTATION, {
-    variables: {
-      cartId,
-      lines: [
-        {
-          merchandiseId: variantId,
-          quantity,
-          attributes,
-        },
-      ],
-    },
-  });
+  // Ensure we have a valid cartId
+  if (!cartId) {
+    throw new Error("Failed to get or create cart");
+  }
 
-  return response.data.cartLinesAdd.cart;
+  // Add item to cart
+  let response;
+  try {
+    response = await shopifyClient.request(CART_LINES_ADD_MUTATION, {
+      variables: {
+        cartId,
+        lines: [
+          {
+            merchandiseId: variantId,
+            quantity,
+            attributes,
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("Shopify API request error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to connect to Shopify API";
+    throw new Error(`Failed to add item to cart: ${errorMessage}`);
+  }
+
+  // Log full response for debugging (only in development)
+  if (process.env.NODE_ENV === "development") {
+    console.log("Shopify cartLinesAdd response:", JSON.stringify(response, null, 2));
+  }
+
+  // Check if response exists
+  if (!response) {
+    console.error("No response from Shopify");
+    throw new Error("No response from Shopify API");
+  }
+
+  // Check for GraphQL errors at top level
+  if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+    const errorMessages = response.errors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    console.error("GraphQL errors:", response.errors);
+    throw new Error(`GraphQL error: ${errorMessages}`);
+  }
+
+  // Handle different response structures
+  // Some Shopify clients return data directly, others wrap it in a data property
+  let responseData = response.data || response;
+  
+  if (!responseData) {
+    console.error("No data in response. Full response:", JSON.stringify(response, null, 2));
+    throw new Error("Invalid response from Shopify API: No data property");
+  }
+
+  if (!responseData.cartLinesAdd) {
+    console.error("cartLinesAdd not found. Available keys:", Object.keys(responseData || {}));
+    console.error("Full response:", JSON.stringify(response, null, 2));
+    throw new Error(`Failed to add item to cart: Invalid response structure. Available keys: ${Object.keys(responseData).join(", ")}`);
+  }
+
+  // Check for user errors from Shopify
+  if (responseData.cartLinesAdd.userErrors && responseData.cartLinesAdd.userErrors.length > 0) {
+    const errorMessages = responseData.cartLinesAdd.userErrors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    throw new Error(errorMessages);
+  }
+
+  if (!responseData.cartLinesAdd.cart) {
+    console.error("Cart not found in response:", responseData.cartLinesAdd);
+    throw new Error("Failed to add item to cart: Cart not returned");
+  }
+
+  const updatedCart = responseData.cartLinesAdd.cart;
+  
+  // Ensure cart ID is saved (in case it changed)
+  if (updatedCart.id !== cartId) {
+    await setCartId(updatedCart.id);
+  }
+
+  return updatedCart;
 }
 
 export async function updateCartLine(
@@ -97,19 +259,67 @@ export async function updateCartLine(
     throw new Error("Cart not found");
   }
 
-  const response = await shopifyClient.request(CART_LINES_UPDATE_MUTATION, {
-    variables: {
-      cartId,
-      lines: [
-        {
-          id: lineId,
-          quantity,
-        },
-      ],
-    },
-  });
+  let response;
+  try {
+    response = await shopifyClient.request(CART_LINES_UPDATE_MUTATION, {
+      variables: {
+        cartId,
+        lines: [
+          {
+            id: lineId,
+            quantity,
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("Shopify API request error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to connect to Shopify API";
+    throw new Error(`Failed to update cart: ${errorMessage}`);
+  }
 
-  return response.data.cartLinesUpdate.cart;
+  // Check if response exists
+  if (!response) {
+    console.error("No response from Shopify");
+    throw new Error("No response from Shopify API");
+  }
+
+  // Check for GraphQL errors at top level
+  if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+    const errorMessages = response.errors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    console.error("GraphQL errors:", response.errors);
+    throw new Error(`GraphQL error: ${errorMessages}`);
+  }
+
+  // Handle different response structures
+  let responseData = response.data || response;
+  
+  if (!responseData) {
+    console.error("No data in response. Full response:", JSON.stringify(response, null, 2));
+    throw new Error("Invalid response from Shopify API: No data property");
+  }
+
+  if (!responseData.cartLinesUpdate) {
+    console.error("cartLinesUpdate not found. Available keys:", Object.keys(responseData || {}));
+    throw new Error(`Failed to update cart: Invalid response structure. Available keys: ${Object.keys(responseData).join(", ")}`);
+  }
+
+  // Check for user errors from Shopify
+  if (responseData.cartLinesUpdate.userErrors && responseData.cartLinesUpdate.userErrors.length > 0) {
+    const errorMessages = responseData.cartLinesUpdate.userErrors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    throw new Error(errorMessages);
+  }
+
+  if (!responseData.cartLinesUpdate.cart) {
+    console.error("Cart not found in response:", responseData.cartLinesUpdate);
+    throw new Error("Failed to update cart: Cart not returned");
+  }
+
+  return responseData.cartLinesUpdate.cart;
 }
 
 export async function removeCartLine(lineId: string): Promise<Cart> {
@@ -118,14 +328,62 @@ export async function removeCartLine(lineId: string): Promise<Cart> {
     throw new Error("Cart not found");
   }
 
-  const response = await shopifyClient.request(CART_LINES_REMOVE_MUTATION, {
-    variables: {
-      cartId,
-      lineIds: [lineId],
-    },
-  });
+  let response;
+  try {
+    response = await shopifyClient.request(CART_LINES_REMOVE_MUTATION, {
+      variables: {
+        cartId,
+        lineIds: [lineId],
+      },
+    });
+  } catch (error) {
+    console.error("Shopify API request error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to connect to Shopify API";
+    throw new Error(`Failed to remove cart line: ${errorMessage}`);
+  }
 
-  return response.data.cartLinesRemove.cart;
+  // Check if response exists
+  if (!response) {
+    console.error("No response from Shopify");
+    throw new Error("No response from Shopify API");
+  }
+
+  // Check for GraphQL errors at top level
+  if (response.errors && Array.isArray(response.errors) && response.errors.length > 0) {
+    const errorMessages = response.errors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    console.error("GraphQL errors:", response.errors);
+    throw new Error(`GraphQL error: ${errorMessages}`);
+  }
+
+  // Handle different response structures
+  let responseData = response.data || response;
+  
+  if (!responseData) {
+    console.error("No data in response. Full response:", JSON.stringify(response, null, 2));
+    throw new Error("Invalid response from Shopify API: No data property");
+  }
+
+  if (!responseData.cartLinesRemove) {
+    console.error("cartLinesRemove not found. Available keys:", Object.keys(responseData || {}));
+    throw new Error(`Failed to remove cart line: Invalid response structure. Available keys: ${Object.keys(responseData).join(", ")}`);
+  }
+
+  // Check for user errors from Shopify
+  if (responseData.cartLinesRemove.userErrors && responseData.cartLinesRemove.userErrors.length > 0) {
+    const errorMessages = responseData.cartLinesRemove.userErrors
+      .map((error: { message: string }) => error.message)
+      .join(", ");
+    throw new Error(errorMessages);
+  }
+
+  if (!responseData.cartLinesRemove.cart) {
+    console.error("Cart not found in response:", responseData.cartLinesRemove);
+    throw new Error("Failed to remove cart line: Cart not returned");
+  }
+
+  return responseData.cartLinesRemove.cart;
 }
 
 const CART_QUERY = `#graphql

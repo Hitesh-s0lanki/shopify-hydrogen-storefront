@@ -26,20 +26,6 @@ export default function RootLayout({
       <TRPCReactProvider>
         <html lang="en">
           <body className={font.className}>
-            <div className="bg-muted border-b text-center py-1.5 px-4">
-              <p className="text-xs text-muted-foreground">
-                This is a Next.js app. Unable to deploy Hydrogen app on Vercel. You can check out the code for Hydrogen on{" "}
-                <a
-                  href="https://github.com/your-username/your-repo/tree/main"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground"
-                >
-                  main branch
-                </a>
-                .
-              </p>
-            </div>
             <Toaster />
             {children}
           </body>

@@ -27,8 +27,17 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        const cart = await addToCart(variantId, quantity || 1, attributes || []);
-        return NextResponse.json({ cart });
+        try {
+          const cart = await addToCart(variantId, quantity || 1, attributes || []);
+          return NextResponse.json({ cart });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to add item to cart";
+          console.error("Add to cart error:", errorMessage);
+          return NextResponse.json(
+            { error: errorMessage },
+            { status: 400 }
+          );
+        }
 
       case "update":
         if (!lineId || quantity === undefined) {
@@ -37,8 +46,17 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        const updatedCart = await updateCartLine(lineId, quantity);
-        return NextResponse.json({ cart: updatedCart });
+        try {
+          const updatedCart = await updateCartLine(lineId, quantity);
+          return NextResponse.json({ cart: updatedCart });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to update cart";
+          console.error("Update cart error:", errorMessage);
+          return NextResponse.json(
+            { error: errorMessage },
+            { status: 400 }
+          );
+        }
 
       case "remove":
         if (!lineId) {
@@ -47,8 +65,17 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        const removedCart = await removeCartLine(lineId);
-        return NextResponse.json({ cart: removedCart });
+        try {
+          const removedCart = await removeCartLine(lineId);
+          return NextResponse.json({ cart: removedCart });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : "Failed to remove item from cart";
+          console.error("Remove cart error:", errorMessage);
+          return NextResponse.json(
+            { error: errorMessage },
+            { status: 400 }
+          );
+        }
 
       default:
         return NextResponse.json(
@@ -58,8 +85,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Cart API error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Cart operation failed";
     return NextResponse.json(
-      { error: "Cart operation failed" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
